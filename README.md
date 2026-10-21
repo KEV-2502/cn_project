@@ -157,7 +157,7 @@ NetShield is built with a clean separation of concerns to allow swapping packet 
 | `GET` | `/api/health` | Service health status, DB connectivity, model readiness |
 | `GET` | `/api/pcaps` | List uploaded PCAP captures and metadata |
 | `GET` | `/api/pcaps/{id}` | Inspect a single capture |
-| `POST` | `/api/pcaps/upload` | Upload PCAP file, check deduplication, trigger analysis |
+| `POST` | `/api/pcaps/upload` | Upload PCAP/PCAPNG file, enforce size limits, calculate SHA-256, deduplicate, and run streaming ingestion |
 | `DELETE` | `/api/pcaps/{id}` | Remove capture and cascade delete associated flows/alerts |
 | `GET` | `/api/flows` | Query paginated bidirectional flows (filterable by IP, proto, anomalies) |
 | `GET` | `/api/flows/{id}` | Single flow inspection |
@@ -169,10 +169,42 @@ NetShield is built with a clean separation of concerns to allow swapping packet 
 
 ---
 
-## 6. Milestones
+## 6. Packet Parsing & Byte Count Semantics
+
+The packet parser (`backend/app/pipeline/parser.py`) extracts metadata from packets while strictly preserving protocol boundaries and layer byte semantics:
+- **Captured Frame Length (`frame_len`)**: Total raw wire bytes recorded in the capture file (`len(bytes(pkt))`).
+- **IP Packet Length (`ip_len`)**: Network layer octet count (IP header + payload) as defined by **RFC 7011 / IPFIX (`octetDeltaCount`)**. This represents the canonical flow byte metric stored in `NetworkFlow` (`forward_bytes`, `backward_bytes`, `total_bytes`).
+- **Transport Payload Length (`payload_len`)**: Application layer payload bytes (excluding TCP/UDP transport headers).
+- **Protocols Supported**: IPv4, IPv6, TCP, UDP, ICMP, ICMPv6, and DNS (over UDP and TCP). Non-IP packets (e.g. ARP, spanning-tree) and malformed frames are safely bypassed without crashing.
+
+---
+
+## 7. Bidirectional Flow Aggregation Semantics
+
+The flow aggregator (`backend/app/pipeline/flow_aggregator.py`) maintains session state using the following rules:
+- **Canonical Flow Key**: A direction-independent 5-tuple key:
+  `min(ep1, ep2)[0]:min(ep1, ep2)[1]-max(ep1, ep2)[0]:max(ep1, ep2)[1]-protocol`
+  Packets in forward and reverse directions map to the same flow record while directional packet and byte counters are incremented separately.
+- **Directional Accounting**:
+  - `src_ip`, `src_port`: The flow initiator (sender of the first observed packet).
+  - `dst_ip`, `dst_port`: The responder endpoint.
+  - `forward_packets`, `forward_bytes`: Traffic from initiator to responder.
+  - `backward_packets`, `backward_bytes`: Traffic from responder to initiator.
+- **TCP Connection State Tracking**:
+  - Evaluates `SYN`, `SYN-ACK`, `ACK`, `FIN`, and `RST` flags across both directions.
+  - States: `SYN_SENT`, `SYN_ACK_RECEIVED`, `ESTABLISHED`, `CLOSING`, `CLOSED`, `RESET`.
+  - Mid-stream captures without full handshakes default to `ESTABLISHED` upon observing ACK/data traffic.
+- **Idle Timeouts & Session Expiration**:
+  - If the gap between a new packet and the flow's last seen timestamp exceeds `FLOW_TIMEOUT_SECONDS` (default: 60s), the current session is retired and a new flow is instantiated.
+- **Connection Termination Handling**:
+  - If a TCP flow is in `CLOSED` or `RESET` state and a new `SYN` handshake packet arrives on the same 5-tuple, the old flow is finalized to prevent merging unrelated connections.
+
+---
+
+## 8. Milestones
 
 - [x] **Milestone 1 — Foundation**: Repository structure, Git initialization, database models, schemas, health check, modular API routers, full React/TS dashboard skeleton, automated tests, and production build verification.
-- [ ] **Milestone 2 — Packet and flow pipeline**: PCAP upload, Scapy metadata parsing, bidirectional flow aggregation with timeouts and TCP state.
+- [x] **Milestone 2 — Packet and flow pipeline**: PCAP upload, Scapy streaming reader, IPv4/IPv6, TCP/UDP/ICMP/DNS parsing, bidirectional flow aggregation with timeouts and TCP state, SHA-256 deduplication, and automated unit/integration test suite.
 - [ ] **Milestone 3 — Rule-based detections**: Port scan, excessive connection rate, and suspicious DNS behavior detection rules.
 - [ ] **Milestone 4 — AI and risk scoring**: Isolation Forest training, feature extraction, explainable 0–100 risk scoring.
 - [ ] **Milestone 5 — Dashboard integration**: End-to-end integration with live alerts, flow explorer, incident triage.
