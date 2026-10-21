@@ -12,10 +12,13 @@ from backend.app.database import get_db
 from backend.app.models.pcap import PcapFile, PcapStatus
 from backend.app.models.flow import NetworkFlow
 from backend.app.models.alert import ThreatAlert
+from backend.app.models.dns import DnsQueryRecord
 from backend.app.schemas.pcap import PcapResponse
+from backend.app.schemas.alert import AlertResponse
 from backend.app.config import settings
 from backend.app.pipeline.parser import get_pcap_reader
 from backend.app.pipeline.ingestion import process_pcap_ingestion
+from backend.app.pipeline.rules.engine import RuleEngine
 
 router = APIRouter(prefix="/pcaps", tags=["PCAPs"])
 
@@ -173,6 +176,18 @@ def upload_pcap(
         )
 
 
+@router.post("/{pcap_id}/detect", response_model=List[AlertResponse])
+def run_threat_detection(pcap_id: int, db: Session = Depends(get_db)):
+    """Re-run the rule-based threat detection engine on an existing capture deterministically."""
+    pcap = db.query(PcapFile).filter(PcapFile.id == pcap_id).first()
+    if not pcap:
+        raise HTTPException(status_code=404, detail=f"PCAP with ID {pcap_id} not found")
+
+    rule_engine = RuleEngine()
+    alerts = rule_engine.run_and_persist(pcap_id, db)
+    return alerts
+
+
 @router.delete("/{pcap_id}")
 def delete_pcap(pcap_id: int, db: Session = Depends(get_db)):
     pcap = db.query(PcapFile).filter(PcapFile.id == pcap_id).first()
@@ -187,8 +202,9 @@ def delete_pcap(pcap_id: int, db: Session = Depends(get_db)):
     except Exception:
         pass
 
-    # Delete associated flows and alerts
+    # Delete associated flows, DNS records, and alerts
     db.query(ThreatAlert).filter(ThreatAlert.pcap_id == pcap_id).delete()
+    db.query(DnsQueryRecord).filter(DnsQueryRecord.pcap_id == pcap_id).delete()
     db.query(NetworkFlow).filter(NetworkFlow.pcap_id == pcap_id).delete()
     db.delete(pcap)
     db.commit()

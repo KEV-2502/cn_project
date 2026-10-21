@@ -158,6 +158,7 @@ NetShield is built with a clean separation of concerns to allow swapping packet 
 | `GET` | `/api/pcaps` | List uploaded PCAP captures and metadata |
 | `GET` | `/api/pcaps/{id}` | Inspect a single capture |
 | `POST` | `/api/pcaps/upload` | Upload PCAP/PCAPNG file, enforce size limits, calculate SHA-256, deduplicate, and run streaming ingestion |
+| `POST` | `/api/pcaps/{id}/detect` | Re-run rule-based threat detection deterministically on an existing capture |
 | `DELETE` | `/api/pcaps/{id}` | Remove capture and cascade delete associated flows/alerts |
 | `GET` | `/api/flows` | Query paginated bidirectional flows (filterable by IP, proto, anomalies) |
 | `GET` | `/api/flows/{id}` | Single flow inspection |
@@ -201,11 +202,49 @@ The flow aggregator (`backend/app/pipeline/flow_aggregator.py`) maintains sessio
 
 ---
 
-## 8. Milestones
+## 8. Rule-Based Threat Detection Engine
+
+The detection package (`backend/app/pipeline/rules/`) provides modular, deterministic rules with explainable risk scoring:
+
+### Configured Rules & Default Thresholds
+1. **Vertical Port Scanning (`RULE_PORT_SCAN_VERTICAL`)**:
+   - Triggers when a source IP probes $\ge$ `PORT_SCAN_UNIQUE_PORTS` (default: 15) unique destination ports on a single host within `PORT_SCAN_WINDOW_SECONDS` (default: 10.0s).
+   - Severity: `HIGH`. Base risk score: 70 + intensity bonus (up to 95).
+2. **Horizontal Host Sweeping (`RULE_PORT_SCAN_HORIZONTAL`)**:
+   - Triggers when a source IP probes $\ge$ `PORT_SCAN_HORIZONTAL_HOSTS` (default: 10) unique destination hosts within `PORT_SCAN_WINDOW_SECONDS` (default: 10.0s).
+   - Severity: `HIGH`. Base risk score: 70 + intensity bonus (up to 95).
+3. **Excessive Connection Attempts (`RULE_EXCESSIVE_CONN_RATE`)**:
+   - Triggers when a source IP initiates $\ge$ `EXCESSIVE_CONN_RATE` (default: 40) connections against a target service/port within `EXCESSIVE_CONN_WINDOW_SECONDS` (default: 5.0s).
+   - Severity: `MEDIUM`/`HIGH`. Base risk score: 55 + intensity bonus (up to 90).
+   - Explanation notes potential service stress, rapid polling, or connection exhaustion; metadata does not claim authentication failure.
+4. **Suspicious DNS Tunneling / Exfiltration (`RULE_DNS_TUNNELING_LONG_NAME`)**:
+   - Triggers when a DNS query name length $\ge$ `DNS_LONG_NAME_LENGTH` (default: 50 characters).
+   - Severity: `HIGH`. Base risk score: 70 + intensity bonus (up to 95).
+5. **Excessive DNS Query Volume (`RULE_DNS_HIGH_VOLUME`)**:
+   - Triggers when a source IP generates $\ge$ `DNS_BURST_QUERY_COUNT` (default: 25) DNS queries within `DNS_BURST_WINDOW_SECONDS` (default: 5.0s).
+   - Severity: `MEDIUM`. Base risk score: 50 + intensity bonus (up to 85).
+6. **DNS Domain Generation / Enumeration (`RULE_DNS_HIGH_DIVERSITY`)**:
+   - Triggers when a source IP queries $\ge$ `DNS_UNIQUE_DOMAINS_THRESHOLD` (default: 15) unique domain names within a capture.
+   - Severity: `MEDIUM`/`HIGH`. Base risk score: 60 + intensity bonus (up to 85).
+
+### Risk-Scoring Methodology (0–100 Scale)
+Every alert calculates an explainable score:
+$$\text{Risk Score} = \min(100, \text{Base Severity} + \text{Behavioral Intensity Modifier})$$
+- Base Severity: `CRITICAL` (85), `HIGH` (70), `MEDIUM` (50–60), `LOW` (25).
+- Intensity Modifier: Calculated deterministically from the ratio/magnitude by which observed measurements exceed the configured threshold.
+- The human-readable `explanation` breaks down both components clearly.
+
+### Idempotence & Deduplication
+- Ingestion automatically runs the rule engine and persists findings to `ThreatAlert`.
+- Re-running detection via `POST /api/pcaps/{id}/detect` clears previous alerts for that capture and regenerates fresh alerts deterministically, avoiding duplicate alerts.
+
+---
+
+## 9. Milestones
 
 - [x] **Milestone 1 — Foundation**: Repository structure, Git initialization, database models, schemas, health check, modular API routers, full React/TS dashboard skeleton, automated tests, and production build verification.
 - [x] **Milestone 2 — Packet and flow pipeline**: PCAP upload, Scapy streaming reader, IPv4/IPv6, TCP/UDP/ICMP/DNS parsing, bidirectional flow aggregation with timeouts and TCP state, SHA-256 deduplication, and automated unit/integration test suite.
-- [ ] **Milestone 3 — Rule-based detections**: Port scan, excessive connection rate, and suspicious DNS behavior detection rules.
+- [x] **Milestone 3 — Rule-based detections**: Port scan, excessive connection rate, and suspicious DNS behavior detection rules with explainable risk scores and API integration.
 - [ ] **Milestone 4 — AI and risk scoring**: Isolation Forest training, feature extraction, explainable 0–100 risk scoring.
 - [ ] **Milestone 5 — Dashboard integration**: End-to-end integration with live alerts, flow explorer, incident triage.
 - [ ] **Milestone 6 — Validation and demonstration**: Verification PCAP test, documentation, demo instructions.

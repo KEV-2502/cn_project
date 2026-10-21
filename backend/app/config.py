@@ -25,7 +25,8 @@ class Settings(BaseModel):
     FLOW_TIMEOUT_SECONDS: float = 60.0  # Inactive timeout for bidirectional flows
     
     # Rule Detection Thresholds (Configurable)
-    PORT_SCAN_UNIQUE_PORTS: int = 15     # unique ports from same src in window
+    PORT_SCAN_UNIQUE_PORTS: int = 15     # unique ports from same src to one host in window
+    PORT_SCAN_HORIZONTAL_HOSTS: int = 10 # unique target hosts probed from same src in window
     PORT_SCAN_WINDOW_SECONDS: float = 10.0
     
     EXCESSIVE_CONN_RATE: int = 40        # connections to same dst within window
@@ -34,6 +35,7 @@ class Settings(BaseModel):
     DNS_BURST_QUERY_COUNT: int = 25      # queries from src in window
     DNS_BURST_WINDOW_SECONDS: float = 5.0
     DNS_LONG_NAME_LENGTH: int = 50       # suspicious domain length (exfiltration/tunneling)
+    DNS_UNIQUE_DOMAINS_THRESHOLD: int = 15  # unique domain names queried from src in window
     DNS_SUBDOMAIN_ENTROPY_THRESHOLD: float = 3.5  # entropy or high subdomain count
 
 settings = Settings()
