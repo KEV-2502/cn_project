@@ -169,3 +169,47 @@ def test_large_capture_streaming_processing(client, db_session):
     assert data["packet_count"] == 120
     assert data["flow_count"] == 4
     assert data["status"] == "COMPLETED"
+
+
+def test_upload_and_persistence_of_bidirectional_tcp_pcap(client, db_session):
+    """Test full upload, ingestion, and DB persistence of data/test_bidirectional.pcap."""
+    from pathlib import Path
+    pcap_path = Path("data/test_bidirectional.pcap")
+    assert pcap_path.exists(), "test_bidirectional.pcap must exist"
+
+    with open(pcap_path, "rb") as f:
+        file_bytes = f.read()
+
+    response = client.post(
+        "/api/pcaps/upload",
+        files={"file": ("test_bidirectional.pcap", file_bytes, "application/octet-stream")},
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["filename"] == "test_bidirectional.pcap"
+    assert data["status"] == "COMPLETED"
+    assert data["packet_count"] == 9
+    assert data["flow_count"] == 1
+    assert round(data["duration_seconds"], 2) == 0.80
+
+    pcap_id = data["id"]
+
+    # Verify flow record in database
+    db_flow = db_session.query(NetworkFlow).filter(NetworkFlow.pcap_id == pcap_id).first()
+    assert db_flow is not None
+    assert db_flow.protocol == "TCP"
+    assert db_flow.src_ip == "192.168.1.100"
+    assert db_flow.dst_ip == "10.0.0.5"
+    assert db_flow.src_port == 54321
+    assert db_flow.dst_port == 80
+    assert db_flow.forward_packets == 6
+    assert db_flow.backward_packets == 3
+    assert db_flow.total_packets == 9
+    assert db_flow.forward_bytes == 293
+    assert db_flow.backward_bytes == 198
+    assert db_flow.total_bytes == 491
+    assert db_flow.tcp_flags_forward == "AFPS"
+    assert db_flow.tcp_flags_backward == "AFPS"
+    assert db_flow.tcp_state == "CLOSED"
+    assert round(db_flow.duration, 4) == 0.80
+

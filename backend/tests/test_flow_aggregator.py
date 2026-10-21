@@ -171,3 +171,60 @@ def test_udp_and_icmp_flows():
     assert icmp_flow.src_port == 0
     assert icmp_flow.dst_port == 0
     assert icmp_flow.tcp_state == "N/A"
+
+
+def test_synthetic_bidirectional_tcp_conversation():
+    """Verify that a full 9-packet synthetic TCP session merges into a single bidirectional flow."""
+    from data.generate_bidirectional_test_pcap import generate_bidirectional_packets
+    from backend.app.pipeline.parser import parse_packet
+
+    packets = generate_bidirectional_packets(
+        client_ip="192.168.1.100",
+        server_ip="10.0.0.5",
+        client_port=54321,
+        server_port=80,
+        base_time=1766100000.0,
+    )
+
+    aggregator = FlowAggregator(timeout_seconds=60.0)
+    for pkt in packets:
+        parsed = parse_packet(pkt)
+        assert parsed is not None
+        aggregator.add_packet(parsed)
+
+    flows = aggregator.finalize_all()
+
+    # 1. All packets grouped into exactly one bidirectional flow
+    assert len(flows) == 1
+    flow = flows[0]
+
+    # Endpoints & 5-tuple canonical key
+    assert flow.src_ip == "192.168.1.100"
+    assert flow.dst_ip == "10.0.0.5"
+    assert flow.src_port == 54321
+    assert flow.dst_port == 80
+    assert flow.protocol == "TCP"
+    assert flow.flow_key == "10.0.0.5:80-192.168.1.100:54321-TCP"
+
+    # 2. Forward and reverse packet counts
+    assert flow.forward_packets == 6
+    assert flow.backward_packets == 3
+    assert flow.total_packets == 9
+
+    # 3. Directional byte counts matching documented semantics (IP layer length)
+    # Forward: 40 (SYN) + 40 (ACK) + 93 (REQ) + 40 (ACK) + 40 (FIN-ACK) + 40 (ACK) = 293
+    # Backward: 40 (SYN-ACK) + 118 (RESP) + 40 (FIN-ACK) = 198
+    assert flow.forward_bytes == 293
+    assert flow.backward_bytes == 198
+    assert flow.total_bytes == 491
+
+    # 4. TCP flags and connection-state indicators
+    assert flow.tcp_flags_forward == "AFPS"
+    assert flow.tcp_flags_backward == "AFPS"
+    assert flow.tcp_state == "CLOSED"
+
+    # 5. Flow duration calculation
+    assert flow.start_time == 1766100000.0
+    assert flow.end_time == 1766100000.8
+    assert round(flow.duration, 4) == 0.8
+
