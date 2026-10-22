@@ -160,11 +160,19 @@ export const FlowExplorerView: React.FC<Props> = ({ selectedPcap, onNavigateUplo
                     </td>
                     <td>
                       {flow.is_anomaly === 1 ? (
-                        <span className="badge badge-high" title={`Score: ${flow.anomaly_score.toFixed(3)}`}>
-                          <ShieldAlert size={12} /> ANOMALOUS
+                        <span
+                          className="badge badge-high"
+                          title={`Anomaly Score: ${flow.anomaly_score.toFixed(3)} | Details: ${flow.anomaly_features_json}`}
+                        >
+                          <ShieldAlert size={12} /> ANOMALOUS ({(flow.anomaly_score * 100).toFixed(0)}%)
                         </span>
                       ) : (
-                        <span style={{ color: 'var(--text-subtle)', fontSize: '0.8rem' }}>Normal</span>
+                        <span
+                          style={{ color: 'var(--text-subtle)', fontSize: '0.8rem' }}
+                          title={`Anomaly Score: ${flow.anomaly_score.toFixed(3)}`}
+                        >
+                          Normal ({(flow.anomaly_score * 100).toFixed(0)}%)
+                        </span>
                       )}
                     </td>
                   </tr>

@@ -213,3 +213,32 @@ def test_upload_and_persistence_of_bidirectional_tcp_pcap(client, db_session):
     assert db_flow.tcp_state == "CLOSED"
     assert round(db_flow.duration, 4) == 0.80
 
+
+def test_upload_and_persistence_of_port_scan_pcap(client, db_session):
+    """Regression test for data/test_port_scan.pcap: 21 packets, triggers port-scan alert."""
+    from pathlib import Path
+    pcap_path = Path("data/test_port_scan.pcap")
+    assert pcap_path.exists(), "test_port_scan.pcap must exist"
+
+    with open(pcap_path, "rb") as f:
+        file_bytes = f.read()
+
+    response = client.post(
+        "/api/pcaps/upload",
+        files={"file": ("test_port_scan.pcap", file_bytes, "application/octet-stream")},
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["filename"] == "test_port_scan.pcap"
+    assert data["status"] == "COMPLETED"
+    assert data["packet_count"] == 21
+    assert data["alert_count"] >= 1
+
+    pcap_id = data["id"]
+    # Check that high severity port scan alert is triggered
+    alerts_res = client.get(f"/api/alerts?pcap_id={pcap_id}&severity=HIGH")
+    assert alerts_res.status_code == 200
+    alert_items = alerts_res.json()["items"]
+    assert any(a["rule_id"] == "RULE_PORT_SCAN_VERTICAL" for a in alert_items)
+
+

@@ -5,6 +5,8 @@ and persists results to the database.
 """
 
 import time
+import json
+import logging
 from typing import Optional
 from pathlib import Path
 from sqlalchemy.orm import Session
@@ -15,7 +17,10 @@ from backend.app.models.dns import DnsQueryRecord
 from backend.app.pipeline.parser import get_pcap_reader, parse_packet
 from backend.app.pipeline.flow_aggregator import FlowAggregator
 from backend.app.pipeline.rules.engine import RuleEngine
+from backend.app.pipeline.ml.model import AnomalyDetector
 from backend.app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 def process_pcap_ingestion(
@@ -119,6 +124,20 @@ def process_pcap_ingestion(
                 anomaly_features_json="{}",
             )
             flow_models.append(flow_model)
+
+        # Apply Isolation Forest anomaly scoring if model is available
+        try:
+            detector = AnomalyDetector()
+            if detector.is_ready and flow_models:
+                scores = detector.score_batch(aggregated_flows)
+                for idx, (score, is_anomaly, attrib) in enumerate(scores):
+                    flow_models[idx].anomaly_score = score
+                    flow_models[idx].is_anomaly = is_anomaly
+                    flow_models[idx].anomaly_features_json = json.dumps(attrib)
+            elif not detector.is_ready:
+                logger.warning("Anomaly detector model artifact not found. Flows persisted with default score 0.0.")
+        except Exception as ml_err:
+            logger.error(f"Error during ML anomaly scoring: {ml_err}. Continuing with default scores.")
 
         if flow_models:
             db.bulk_save_objects(flow_models)

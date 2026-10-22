@@ -240,11 +240,61 @@ $$\text{Risk Score} = \min(100, \text{Base Severity} + \text{Behavioral Intensit
 
 ---
 
-## 9. Milestones
+## 9. Machine Learning Anomaly Detection (Isolation Forest)
+
+NetShield incorporates an **Isolation Forest** unsupervised statistical anomaly detector for network flows (`backend/app/pipeline/ml/`):
+
+### Feature Extraction Schema
+Each bidirectional flow is mapped into a fixed 15-dimensional numerical feature vector:
+1. `forward_packets`: Total packets sent from initiator to responder.
+2. `backward_packets`: Total packets sent from responder to initiator.
+3. `forward_bytes`: Total IP-layer bytes sent from initiator to responder.
+4. `backward_bytes`: Total IP-layer bytes sent from responder to initiator.
+5. `duration`: Flow duration in seconds.
+6. `packet_ratio`: Forward packets to total packets ($\frac{\text{fwd}}{\text{total}} \in [0.0, 1.0]$).
+7. `byte_ratio`: Forward bytes to total bytes ($\frac{\text{fwd\_bytes}}{\text{total\_bytes}} \in [0.0, 1.0]$).
+8. `forward_packet_rate`: Forward packets per second (packets/s).
+9. `backward_packet_rate`: Backward packets per second (packets/s).
+10. `forward_byte_rate`: Forward bytes per second (bytes/s).
+11. `backward_byte_rate`: Backward bytes per second (bytes/s).
+12. `is_tcp`: Binary protocol flag (1 for TCP, 0 otherwise).
+13. `is_udp`: Binary protocol flag (1 for UDP/DNS, 0 otherwise).
+14. `is_icmp`: Binary protocol flag (1 for ICMP, 0 otherwise).
+15. `avg_packet_size`: Mean byte size per packet ($\frac{\text{total\_bytes}}{\text{total\_pkts}}$).
+
+*Edge cases:* Sub-millisecond and zero-duration flows are bounded by an epsilon floor ($10^{-3}$s) to safely compute rates without zero-division errors. Missing or non-finite values are sanitized to 0.0. No IP addresses or port numbers are used as numerical inputs.
+
+### Anomaly Scoring & Attribution
+- **Model Output & Normalization**:
+  $$\text{normalized\_score} = \operatorname{clip}(0.5 - \text{decision\_function}(X), 0.0, 1.0)$$
+  - Normal inliers produce normalized scores $< 0.50$ (`is_anomaly = 0`).
+  - Statistical outliers produce normalized scores $\ge 0.50$ (`is_anomaly = 1`).
+- **Explainable Feature Attribution**:
+  For anomalous flows, z-score deviations against baseline training means and standard deviations are computed and stored in `flow.anomaly_features_json`, identifying the exact features that drove the outlier score (e.g. extreme forward packet rate or extreme packet asymmetry).
+- **Graceful Degradation**:
+  If the model file is not found or fails to load, flows are persisted with default scores (`0.0`), a warning is logged, and the rule-based detection engine continues uninterrupted.
+
+### Training & Evaluation Workflow
+- **Train the Model**:
+  ```bash
+  source .venv/bin/activate
+  python3 scripts/train_model.py
+  ```
+  Generates a synthetic baseline dataset ($N = 2,000$ flows across HTTP, DNS, API, Bulk, and ICMP profiles with fixed seed `42`), trains the Isolation Forest, and serializes the model and metadata to `data/models/`.
+- **Evaluate the Detector**:
+  ```bash
+  source .venv/bin/activate
+  python3 scripts/evaluate_model.py
+  ```
+  Scores a separate validation set (seed `999`) containing 100 benign flows and 50 designed outlier patterns (port scan probes, volumetric floods, exfiltration bursts).
+
+---
+
+## 10. Milestones
 
 - [x] **Milestone 1 — Foundation**: Repository structure, Git initialization, database models, schemas, health check, modular API routers, full React/TS dashboard skeleton, automated tests, and production build verification.
 - [x] **Milestone 2 — Packet and flow pipeline**: PCAP upload, Scapy streaming reader, IPv4/IPv6, TCP/UDP/ICMP/DNS parsing, bidirectional flow aggregation with timeouts and TCP state, SHA-256 deduplication, and automated unit/integration test suite.
 - [x] **Milestone 3 — Rule-based detections**: Port scan, excessive connection rate, and suspicious DNS behavior detection rules with explainable risk scores and API integration.
-- [ ] **Milestone 4 — AI and risk scoring**: Isolation Forest training, feature extraction, explainable 0–100 risk scoring.
+- [x] **Milestone 4 — AI and risk scoring**: Isolation Forest training, feature extraction, explainable 0–100 risk scoring, flow attribution, and API/UI integration.
 - [ ] **Milestone 5 — Dashboard integration**: End-to-end integration with live alerts, flow explorer, incident triage.
 - [ ] **Milestone 6 — Validation and demonstration**: Verification PCAP test, documentation, demo instructions.

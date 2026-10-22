@@ -19,6 +19,7 @@ from backend.app.config import settings
 from backend.app.pipeline.parser import get_pcap_reader
 from backend.app.pipeline.ingestion import process_pcap_ingestion
 from backend.app.pipeline.rules.engine import RuleEngine
+from backend.app.pipeline.ml.model import AnomalyDetector
 
 router = APIRouter(prefix="/pcaps", tags=["PCAPs"])
 
@@ -178,10 +179,23 @@ def upload_pcap(
 
 @router.post("/{pcap_id}/detect", response_model=List[AlertResponse])
 def run_threat_detection(pcap_id: int, db: Session = Depends(get_db)):
-    """Re-run the rule-based threat detection engine on an existing capture deterministically."""
+    """Re-run threat detection and ML anomaly scoring on an existing capture deterministically."""
     pcap = db.query(PcapFile).filter(PcapFile.id == pcap_id).first()
     if not pcap:
         raise HTTPException(status_code=404, detail=f"PCAP with ID {pcap_id} not found")
+
+    # Re-score flows if ML model is ready
+    detector = AnomalyDetector()
+    if detector.is_ready:
+        flows = db.query(NetworkFlow).filter(NetworkFlow.pcap_id == pcap_id).all()
+        if flows:
+            import json
+            scores = detector.score_batch(flows)
+            for idx, (score, is_anomaly, attrib) in enumerate(scores):
+                flows[idx].anomaly_score = score
+                flows[idx].is_anomaly = is_anomaly
+                flows[idx].anomaly_features_json = json.dumps(attrib)
+            db.commit()
 
     rule_engine = RuleEngine()
     alerts = rule_engine.run_and_persist(pcap_id, db)
