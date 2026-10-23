@@ -1,0 +1,173 @@
+{
+  "metadata": {
+    "execution_timestamp": "2026-10-23T12:47:10Z",
+    "total_runtime_seconds": 0.15,
+    "capture_source": "Monday-WorkingHours.pcap (PCAPNG, 10.08 GB)",
+    "flows_evaluated_count": 2825,
+    "flows_database": "/home/kev/Projects/CN Project/experiments/cic_ids2017/reports/monday_pcap_slice.db"
+  },
+  "schema_compatibility_audit": {
+    "feature_count": 15,
+    "feature_ordering_identical": true,
+    "duration_units_identical": "Both in seconds (s)",
+    "ratio_bounds_identical": "Both bounded in [0.0, 1.0]",
+    "protocol_flags_identical": "TCP=1/0, UDP=1/0, ICMP=1/0",
+    "semantic_divergence_identified": {
+      "byte_metrics": "Production PCAP sums IP total length (RFC 7011 octets); CIC-IDS2017 measures L4 transport payload bytes only.",
+      "zero_byte_impact": "Control/handshake flows in PCAP have >= 46 bytes; in CIC CSV they have 0 bytes.",
+      "adapter_solution": "Semantic adapter subtracts L3/L4 header overhead (40B for TCP, 28B for UDP) to align with payload semantics."
+    }
+  },
+  "model_evaluations": {
+    "1. Production Model (Raw Features)": {
+      "model_type": "IsolationForest",
+      "feature_mode": "raw",
+      "threshold": 0.5,
+      "runtime_seconds": 0.0156,
+      "score_mean": 0.5067,
+      "score_median": 0.5173,
+      "score_std": 0.1288,
+      "score_min": 0.2928,
+      "score_max": 0.683,
+      "flagged_flows": 1456,
+      "flagged_rate_percent": 51.54,
+      "scores_sample": [
+        0.4021,
+        0.3987,
+        0.4207,
+        0.3526,
+        0.478,
+        0.3559,
+        0.6316,
+        0.5971,
+        0.4111,
+        0.5922
+      ]
+    },
+    "2. Candidate Model (Raw Features)": {
+      "model_type": "IsolationForest",
+      "feature_mode": "raw",
+      "threshold": 0.5,
+      "runtime_seconds": 0.0115,
+      "score_mean": 0.3048,
+      "score_median": 0.3011,
+      "score_std": 0.0959,
+      "score_min": 0.1966,
+      "score_max": 0.6254,
+      "flagged_flows": 193,
+      "flagged_rate_percent": 6.83,
+      "scores_sample": [
+        0.2747,
+        0.2747,
+        0.2309,
+        0.2141,
+        0.3377,
+        0.2067,
+        0.3346,
+        0.5199,
+        0.2747,
+        0.4286
+      ]
+    },
+    "3. Experimental Log1p (Direct, tau=0.50)": {
+      "model_type": "IsolationForest",
+      "feature_mode": "log1p_direct",
+      "threshold": 0.5,
+      "runtime_seconds": 0.0122,
+      "score_mean": 0.3701,
+      "score_median": 0.3428,
+      "score_std": 0.0726,
+      "score_min": 0.2838,
+      "score_max": 0.5777,
+      "flagged_flows": 274,
+      "flagged_rate_percent": 9.7,
+      "scores_sample": [
+        0.4325,
+        0.4296,
+        0.4046,
+        0.339,
+        0.4673,
+        0.3208,
+        0.3418,
+        0.5494,
+        0.4372,
+        0.5208
+      ]
+    },
+    "4. Experimental Log1p (Direct, tau=0.487)": {
+      "model_type": "IsolationForest",
+      "feature_mode": "log1p_direct",
+      "threshold": 0.487,
+      "runtime_seconds": 0.012,
+      "score_mean": 0.3701,
+      "score_median": 0.3428,
+      "score_std": 0.0726,
+      "score_min": 0.2838,
+      "score_max": 0.5777,
+      "flagged_flows": 337,
+      "flagged_rate_percent": 11.93,
+      "scores_sample": [
+        0.4325,
+        0.4296,
+        0.4046,
+        0.339,
+        0.4673,
+        0.3208,
+        0.3418,
+        0.5494,
+        0.4372,
+        0.5208
+      ]
+    },
+    "5. Experimental Log1p (Adapted, tau=0.50)": {
+      "model_type": "IsolationForest",
+      "feature_mode": "log1p_adapted",
+      "threshold": 0.5,
+      "runtime_seconds": 0.0125,
+      "score_mean": 0.3581,
+      "score_median": 0.3326,
+      "score_std": 0.0793,
+      "score_min": 0.2674,
+      "score_max": 0.5778,
+      "flagged_flows": 268,
+      "flagged_rate_percent": 9.49,
+      "scores_sample": [
+        0.4372,
+        0.4293,
+        0.4159,
+        0.3532,
+        0.4699,
+        0.3369,
+        0.3374,
+        0.5494,
+        0.4393,
+        0.511
+      ]
+    },
+    "6. Experimental Log1p (Adapted, tau=0.487)": {
+      "model_type": "IsolationForest",
+      "feature_mode": "log1p_adapted",
+      "threshold": 0.487,
+      "runtime_seconds": 0.0124,
+      "score_mean": 0.3581,
+      "score_median": 0.3326,
+      "score_std": 0.0793,
+      "score_min": 0.2674,
+      "score_max": 0.5778,
+      "flagged_flows": 335,
+      "flagged_rate_percent": 11.86,
+      "scores_sample": [
+        0.4372,
+        0.4293,
+        0.4159,
+        0.3532,
+        0.4699,
+        0.3369,
+        0.3374,
+        0.5494,
+        0.4393,
+        0.511
+      ]
+    }
+  }
+}

@@ -1,0 +1,268 @@
+{
+  "dataset_provenance": {
+    "pcap_file": "Monday-WorkingHours.pcap",
+    "pcap_size_bytes": 10822507416,
+    "pcap_sha256": "f6eac599358f216b074338813a1cf7be3cc4e91d116e13efc0dc71f2cca11972",
+    "source_mirror": "Ariasyah/cic-ids-2017 Hugging Face mirror",
+    "capture_nature": "CIC-IDS2017 Monday-WorkingHours intended-benign capture"
+  },
+  "feature_schema": {
+    "features_count": 15,
+    "features_ordered": [
+      "forward_packets",
+      "backward_packets",
+      "forward_bytes",
+      "backward_bytes",
+      "duration",
+      "packet_ratio",
+      "byte_ratio",
+      "forward_packet_rate",
+      "backward_packet_rate",
+      "forward_byte_rate",
+      "backward_byte_rate",
+      "is_tcp",
+      "is_udp",
+      "is_icmp",
+      "avg_packet_size"
+    ],
+    "preprocessing": {
+      "type": "log1p",
+      "description": "log(1 + x) applied to skewed count, duration, and rate features",
+      "skewed_feature_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        7,
+        8,
+        9,
+        10,
+        14
+      ],
+      "skewed_feature_names": [
+        "forward_packets",
+        "backward_packets",
+        "forward_bytes",
+        "backward_bytes",
+        "duration",
+        "forward_packet_rate",
+        "backward_packet_rate",
+        "forward_byte_rate",
+        "backward_byte_rate",
+        "avg_packet_size"
+      ]
+    }
+  },
+  "split_definitions": {
+    "raw_packets_streamed": 250000,
+    "parsed_ip_packets": 247856,
+    "proto_packet_counts": {
+      "TCP": 214164,
+      "IP_2": 26,
+      "UDP": 11293,
+      "DNS": 21536,
+      "ICMP": 801,
+      "IP_17": 36
+    },
+    "total_aggregated_flows": 7874,
+    "time_span_seconds": 1107.7,
+    "min_timestamp": 1499082958.598308,
+    "max_timestamp": 1499084066.29899,
+    "gap_seconds": 60.0,
+    "splits": {
+      "train": {
+        "flow_count": 2078,
+        "start_time": 1499082958.598308,
+        "end_time": 1499083501.8336833,
+        "duration_seconds": 543.24,
+        "protocols": {
+          "UDP": 563,
+          "TCP": 271,
+          "DNS": 1206,
+          "IP_17": 4,
+          "ICMP": 28,
+          "IP_2": 6
+        },
+        "unique_5tuples": 1770
+      },
+      "quarantine_gap_1": {
+        "start_time": 1499083501.8336833,
+        "end_time": 1499083561.8336833,
+        "duration_seconds": 60.0
+      },
+      "validation": {
+        "flow_count": 2886,
+        "start_time": 1499083561.8336833,
+        "end_time": 1499083759.3738196,
+        "duration_seconds": 197.54,
+        "protocols": {
+          "UDP": 286,
+          "DNS": 1985,
+          "TCP": 614,
+          "IP_2": 1
+        },
+        "unique_5tuples": 2713,
+        "overlap_5tuples_with_train": 152
+      },
+      "quarantine_gap_2": {
+        "start_time": 1499083759.3738196,
+        "end_time": 1499083819.3738196,
+        "duration_seconds": 60.0
+      },
+      "test": {
+        "flow_count": 1827,
+        "start_time": 1499083819.3738196,
+        "end_time": 1499084066.29899,
+        "duration_seconds": 246.93,
+        "protocols": {
+          "UDP": 321,
+          "TCP": 447,
+          "DNS": 1057,
+          "IP_2": 1,
+          "ICMP": 1
+        },
+        "unique_5tuples": 1594,
+        "overlap_5tuples_with_train": 117
+      },
+      "excluded_boundary_crossers": {
+        "flow_count": 1083,
+        "protocols": {
+          "UDP": 185,
+          "TCP": 270,
+          "DNS": 622,
+          "IP_17": 2,
+          "IP_2": 1,
+          "ICMP": 3
+        },
+        "reason": "Flow active inside quarantine gap or spanning across temporal partition boundaries"
+      }
+    },
+    "feature_vector_duplicates_with_train": {
+      "val_duplicates": 334,
+      "test_duplicates": 165
+    }
+  },
+  "candidate_training_configuration": {
+    "model_type": "IsolationForest",
+    "hyperparameters": {
+      "n_estimators": 100,
+      "contamination": 0.01,
+      "random_state": 42,
+      "max_samples": "auto"
+    },
+    "training_flows": 2078,
+    "train_fit_time_seconds": 0.243,
+    "candidate_artifact_path": "experiments/cic_ids2017/artifacts/pcap_model/candidate_pcap_isolation_forest.joblib",
+    "candidate_metadata_path": "experiments/cic_ids2017/artifacts/pcap_model/candidate_pcap_model_metadata.json",
+    "candidate_model_sha256": "d507d782a4a0b7e6eddded9f5075e576c006c8097675eea00bb15f336d41da23"
+  },
+  "validation_calibration": {
+    "method": "Disjoint temporal validation split quantile targeting observed anomaly rate <= 2.0%",
+    "validation_flows": 2886,
+    "raw_model": {
+      "name": "PCAP Model (Raw Features)",
+      "mean": 0.2444,
+      "median": 0.2059,
+      "std": 0.0741,
+      "min": 0.1869,
+      "max": 0.6142,
+      "default_tau": 0.5,
+      "default_flagged": 20,
+      "default_flag_rate_percent": 0.69,
+      "calibrated_tau": 0.452,
+      "calibrated_flagged": 58,
+      "calibrated_flag_rate_percent": 2.01
+    },
+    "log1p_model": {
+      "name": "PCAP Model (Log1p Transform)",
+      "mean": 0.2907,
+      "median": 0.2483,
+      "std": 0.0875,
+      "min": 0.1885,
+      "max": 0.5593,
+      "default_tau": 0.5,
+      "default_flagged": 23,
+      "default_flag_rate_percent": 0.8,
+      "calibrated_tau": 0.4732,
+      "calibrated_flagged": 58,
+      "calibrated_flag_rate_percent": 2.01
+    },
+    "selected_calibrated_threshold": 0.4732
+  },
+  "held_out_test_evaluation": {
+    "test_flows_count": 1827,
+    "production_model": {
+      "name": "Production Model (Synthetic Training, Raw Features)",
+      "threshold": 0.5,
+      "mean": 0.4351,
+      "median": 0.3978,
+      "std": 0.108,
+      "min": 0.2946,
+      "max": 0.7007,
+      "flagged_flows": 437,
+      "observed_anomaly_rate_percent": 23.92,
+      "eval_time_seconds": 0.0094
+    },
+    "candidate_pcap_model_raw": {
+      "name": "Candidate PCAP Model (Raw Features)",
+      "default_threshold": 0.5,
+      "default_flagged_flows": 55,
+      "default_observed_anomaly_rate_percent": 3.01,
+      "calibrated_threshold": 0.452,
+      "calibrated_flagged_flows": 91,
+      "calibrated_observed_anomaly_rate_percent": 4.98,
+      "mean": 0.2565,
+      "median": 0.2052,
+      "std": 0.0923,
+      "min": 0.1879,
+      "max": 0.6553
+    },
+    "candidate_pcap_model_log1p": {
+      "name": "Candidate PCAP Model (Log1p Transform)",
+      "default_threshold": 0.5,
+      "default_flagged_flows": 55,
+      "default_observed_anomaly_rate_percent": 3.01,
+      "calibrated_threshold": 0.4732,
+      "calibrated_flagged_flows": 115,
+      "calibrated_observed_anomaly_rate_percent": 6.29,
+      "mean": 0.3093,
+      "median": 0.255,
+      "std": 0.0941,
+      "min": 0.1883,
+      "max": 0.5735,
+      "eval_time_seconds": 0.0103
+    },
+    "protocol_breakdown": {
+      "TCP": {
+        "flow_count": 447,
+        "production_flag_rate_percent": 22.82,
+        "candidate_default_flag_rate_percent": 12.3,
+        "candidate_calibrated_flag_rate_percent": 25.5
+      },
+      "UDP": {
+        "flow_count": 321,
+        "production_flag_rate_percent": 26.17,
+        "candidate_default_flag_rate_percent": 0.0,
+        "candidate_calibrated_flag_rate_percent": 0.0
+      },
+      "ICMP": {
+        "flow_count": 1,
+        "production_flag_rate_percent": 0.0,
+        "candidate_default_flag_rate_percent": 0.0,
+        "candidate_calibrated_flag_rate_percent": 100.0
+      }
+    },
+    "runtime_and_memory": {
+      "peak_rss_mb": 380.11,
+      "test_eval_time_ms": 10.34,
+      "flows_per_second": 176729.6
+    }
+  },
+  "limitations_and_next_steps": {
+    "evaluation_nature": "Benign-traffic evaluation only. All flows are from Monday intended-benign capture.",
+    "unverified_per_flow_labels": "Capture is intended benign; labels are not independently established for every flow.",
+    "attack_recall_status": "Cannot establish attack recall, precision, PR-AUC, or ROC-AUC without attack PCAPs.",
+    "next_stage": "Process Friday CIC-IDS2017 PCAP (PortScan/DDoS) through the same pipeline for true attack evaluation."
+  }
+}

@@ -1,0 +1,448 @@
+{
+  "experiment_title": "Isolated CIC-IDS2017 Anomaly Detection Evaluation",
+  "evaluation_summary": {
+    "total_evaluation_samples": 23693,
+    "total_benign_samples": 10000,
+    "total_attack_samples": 13693,
+    "anomaly_threshold": 0.5
+  },
+  "overall_metrics": {
+    "precision": 0.6094,
+    "recall": 0.0132,
+    "f1_score": 0.0259,
+    "pr_auc": 0.6419,
+    "roc_auc": 0.5932
+  },
+  "confusion_matrix": {
+    "true_negatives": 9884,
+    "false_positives": 116,
+    "false_negatives": 13512,
+    "true_positives": 181
+  },
+  "false_positive_analysis": {
+    "monday_in_day_holdout": {
+      "samples": 5000,
+      "false_positives": 45,
+      "fpr": 0.009
+    },
+    "tuesday_friday_benign_drift": {
+      "samples": 5000,
+      "false_positives": 71,
+      "fpr": 0.0142
+    }
+  },
+  "per_class_results": {
+    "BENIGN_DRIFT": {
+      "sample_count": 5000,
+      "flagged_count": 71,
+      "rate": 0.0142,
+      "mean_anomaly_score": 0.2557,
+      "category": "BENIGN"
+    },
+    "BENIGN_MONDAY": {
+      "sample_count": 5000,
+      "flagged_count": 45,
+      "rate": 0.009,
+      "mean_anomaly_score": 0.2511,
+      "category": "BENIGN"
+    },
+    "Bot": {
+      "sample_count": 1966,
+      "flagged_count": 44,
+      "rate": 0.0224,
+      "mean_anomaly_score": 0.2263,
+      "category": "ATTACK"
+    },
+    "DDoS": {
+      "sample_count": 1500,
+      "flagged_count": 0,
+      "rate": 0.0,
+      "mean_anomaly_score": 0.3186,
+      "category": "ATTACK"
+    },
+    "DoS GoldenEye": {
+      "sample_count": 1000,
+      "flagged_count": 0,
+      "rate": 0.0,
+      "mean_anomaly_score": 0.2881,
+      "category": "ATTACK"
+    },
+    "DoS Hulk": {
+      "sample_count": 1500,
+      "flagged_count": 3,
+      "rate": 0.002,
+      "mean_anomaly_score": 0.314,
+      "category": "ATTACK"
+    },
+    "DoS Slowhttptest": {
+      "sample_count": 1000,
+      "flagged_count": 25,
+      "rate": 0.025,
+      "mean_anomaly_score": 0.3189,
+      "category": "ATTACK"
+    },
+    "DoS slowloris": {
+      "sample_count": 1000,
+      "flagged_count": 0,
+      "rate": 0.0,
+      "mean_anomaly_score": 0.293,
+      "category": "ATTACK"
+    },
+    "FTP-Patator": {
+      "sample_count": 1000,
+      "flagged_count": 0,
+      "rate": 0.0,
+      "mean_anomaly_score": 0.2525,
+      "category": "ATTACK"
+    },
+    "Heartbleed": {
+      "sample_count": 11,
+      "flagged_count": 11,
+      "rate": 1.0,
+      "mean_anomaly_score": 0.5951,
+      "category": "ATTACK"
+    },
+    "Infiltration": {
+      "sample_count": 36,
+      "flagged_count": 11,
+      "rate": 0.3056,
+      "mean_anomaly_score": 0.4207,
+      "category": "ATTACK"
+    },
+    "PortScan": {
+      "sample_count": 1500,
+      "flagged_count": 0,
+      "rate": 0.0,
+      "mean_anomaly_score": 0.2245,
+      "category": "ATTACK"
+    },
+    "SSH-Patator": {
+      "sample_count": 1000,
+      "flagged_count": 0,
+      "rate": 0.0,
+      "mean_anomaly_score": 0.2548,
+      "category": "ATTACK"
+    },
+    "Web Attack - Brute Force": {
+      "sample_count": 1507,
+      "flagged_count": 71,
+      "rate": 0.0471,
+      "mean_anomaly_score": 0.2405,
+      "category": "ATTACK"
+    },
+    "Web Attack - SQL Injection": {
+      "sample_count": 21,
+      "flagged_count": 0,
+      "rate": 0.0,
+      "mean_anomaly_score": 0.2256,
+      "category": "ATTACK"
+    },
+    "Web Attack - XSS": {
+      "sample_count": 652,
+      "flagged_count": 16,
+      "rate": 0.0245,
+      "mean_anomaly_score": 0.2363,
+      "category": "ATTACK"
+    }
+  },
+  "sample_attributions": [],
+  "feature_schema_documentation": [
+    {
+      "index": 0,
+      "feature": "forward_packets",
+      "source_column": "Total Fwd Packets",
+      "units": "packets",
+      "directionality": "Forward (initiator -> responder)",
+      "transformation": "max(0, float(col))",
+      "semantic_compatibility": "Exact match with NetShield definition."
+    },
+    {
+      "index": 1,
+      "feature": "backward_packets",
+      "source_column": "Total Backward Packets",
+      "units": "packets",
+      "directionality": "Backward (responder -> initiator)",
+      "transformation": "max(0, float(col))",
+      "semantic_compatibility": "Exact match with NetShield definition."
+    },
+    {
+      "index": 2,
+      "feature": "forward_bytes",
+      "source_column": "Total Length of Fwd Packets",
+      "units": "bytes",
+      "directionality": "Forward",
+      "transformation": "max(0, float(col))",
+      "semantic_compatibility": "SEMANTIC DIVERGENCE: CICFlowMeter measures L4 transport payload bytes (pure TCP control packets have 0 bytes). NetShield measures IP-layer total length (pure control packets have 40-60 bytes). Not directly interchangeable."
+    },
+    {
+      "index": 3,
+      "feature": "backward_bytes",
+      "source_column": "Total Length of Bwd Packets",
+      "units": "bytes",
+      "directionality": "Backward",
+      "transformation": "max(0, float(col))",
+      "semantic_compatibility": "SEMANTIC DIVERGENCE: Same L4 payload vs IP-layer discrepancy."
+    },
+    {
+      "index": 4,
+      "feature": "duration",
+      "source_column": "Flow Duration",
+      "units": "seconds",
+      "directionality": "Bidirectional",
+      "transformation": "max(0.0, float(col) / 1,000,000.0)",
+      "semantic_compatibility": "Valid with scale conversion. CIC is in microseconds; converted to seconds. Negative durations clamped to 0.0."
+    },
+    {
+      "index": 5,
+      "feature": "packet_ratio",
+      "source_column": "Derived from Total Fwd Packets and Total Backward Packets",
+      "units": "ratio [0.0, 1.0]",
+      "directionality": "Forward / Total",
+      "transformation": "fwd_pkts / max(1.0, fwd_pkts + bwd_pkts)",
+      "semantic_compatibility": "Valid mathematical derivation. CIC's Down/Up Ratio is an integer-truncated backward/forward ratio and was not used."
+    },
+    {
+      "index": 6,
+      "feature": "byte_ratio",
+      "source_column": "Derived from Total Length of Fwd and Bwd Packets",
+      "units": "ratio [0.0, 1.0]",
+      "directionality": "Forward / Total",
+      "transformation": "fwd_bytes / max(1.0, fwd_bytes + bwd_bytes)",
+      "semantic_compatibility": "Valid derivation on payload bytes (inherits payload semantics)."
+    },
+    {
+      "index": 7,
+      "feature": "forward_packet_rate",
+      "source_column": "Total Fwd Packets / max(duration_s, 1e-3)",
+      "units": "packets/second",
+      "directionality": "Forward",
+      "transformation": "fwd_pkts / max(duration_s, 0.001)",
+      "semantic_compatibility": "Harmonized with NetShield rate formula. Avoids CIC Fwd Packets/s non-finite values."
+    },
+    {
+      "index": 8,
+      "feature": "backward_packet_rate",
+      "source_column": "Total Backward Packets / max(duration_s, 1e-3)",
+      "units": "packets/second",
+      "directionality": "Backward",
+      "transformation": "bwd_pkts / max(duration_s, 0.001)",
+      "semantic_compatibility": "Harmonized with NetShield rate formula."
+    },
+    {
+      "index": 9,
+      "feature": "forward_byte_rate",
+      "source_column": "Total Length of Fwd Packets / max(duration_s, 1e-3)",
+      "units": "bytes/second",
+      "directionality": "Forward",
+      "transformation": "fwd_bytes / max(duration_s, 0.001)",
+      "semantic_compatibility": "Synthesized directional rate (unavailable in raw CIC CSV)."
+    },
+    {
+      "index": 10,
+      "feature": "backward_byte_rate",
+      "source_column": "Total Length of Bwd Packets / max(duration_s, 1e-3)",
+      "units": "bytes/second",
+      "directionality": "Backward",
+      "transformation": "bwd_bytes / max(duration_s, 0.001)",
+      "semantic_compatibility": "Synthesized directional rate (unavailable in raw CIC CSV)."
+    },
+    {
+      "index": 11,
+      "feature": "is_tcp",
+      "source_column": "Protocol",
+      "units": "binary {0.0, 1.0}",
+      "directionality": "N/A",
+      "transformation": "1.0 if Protocol == 6 else 0.0",
+      "semantic_compatibility": "Exact match for IANA TCP protocol number."
+    },
+    {
+      "index": 12,
+      "feature": "is_udp",
+      "source_column": "Protocol",
+      "units": "binary {0.0, 1.0}",
+      "directionality": "N/A",
+      "transformation": "1.0 if Protocol == 17 else 0.0",
+      "semantic_compatibility": "Exact match for IANA UDP protocol number."
+    },
+    {
+      "index": 13,
+      "feature": "is_icmp",
+      "source_column": "Protocol",
+      "units": "binary {0.0, 1.0}",
+      "directionality": "N/A",
+      "transformation": "1.0 if Protocol == 1 else 0.0",
+      "semantic_compatibility": "Valid mapping, but 0 instances of ICMP exist in CIC-IDS2017."
+    },
+    {
+      "index": 14,
+      "feature": "avg_packet_size",
+      "source_column": "(fwd_bytes + bwd_bytes) / max(1.0, fwd_pkts + bwd_pkts)",
+      "units": "bytes/packet",
+      "directionality": "Bidirectional",
+      "transformation": "(fwd_bytes + bwd_bytes) / total_pkts",
+      "semantic_compatibility": "Calculated reliably from totals; raw CIC 'Average Packet Size' exhibits accumulator bugs on asymmetric flows and was not used."
+    }
+  ],
+  "eval_metadata": {
+    "total_eval_samples": 23693,
+    "total_benign_samples": 10000,
+    "monday_benign_holdout_samples": 5000,
+    "drift_benign_samples": 5000,
+    "total_attack_samples": 13693,
+    "per_class_sample_counts": {
+      "BENIGN_MONDAY": 5000,
+      "BENIGN_DRIFT": 5000,
+      "DDoS": 1500,
+      "PortScan": 1500,
+      "Bot": 1966,
+      "Infiltration": 36,
+      "Web Attack - Brute Force": 1507,
+      "Web Attack - XSS": 652,
+      "Web Attack - SQL Injection": 21,
+      "FTP-Patator": 1000,
+      "SSH-Patator": 1000,
+      "DoS slowloris": 1000,
+      "DoS Slowhttptest": 1000,
+      "DoS Hulk": 1500,
+      "DoS GoldenEye": 1000,
+      "Heartbleed": 11
+    },
+    "attack_counts_seen_in_stream": {
+      "DDoS": 128027,
+      "PortScan": 158930,
+      "Bot": 1966,
+      "Infiltration": 36,
+      "Web Attack - Brute Force": 1507,
+      "Web Attack - XSS": 652,
+      "Web Attack - SQL Injection": 21,
+      "FTP-Patator": 7938,
+      "SSH-Patator": 5897,
+      "DoS slowloris": 5796,
+      "DoS Slowhttptest": 5499,
+      "DoS Hulk": 231072,
+      "DoS GoldenEye": 10293,
+      "Heartbleed": 11
+    },
+    "train_count": 15000
+  },
+  "dataset_audit": {
+    "Monday-WorkingHours.pcap_ISCX.csv": {
+      "total_raw_lines": 529919,
+      "valid_records": 529884,
+      "empty_dropped": 0,
+      "malformed_dropped": 0,
+      "exact_duplicates": 34,
+      "negative_durations": 15,
+      "zero_durations": 434,
+      "nan_inf_rows": 434,
+      "exclusion_reasons": {
+        "exact_full_row_duplicate": 34
+      }
+    },
+    "Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv": {
+      "total_raw_lines": 225746,
+      "valid_records": 225743,
+      "empty_dropped": 0,
+      "malformed_dropped": 0,
+      "exact_duplicates": 2,
+      "negative_durations": 2,
+      "zero_durations": 34,
+      "nan_inf_rows": 34,
+      "exclusion_reasons": {
+        "exact_full_row_duplicate": 2
+      }
+    },
+    "Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv": {
+      "total_raw_lines": 286468,
+      "valid_records": 286466,
+      "empty_dropped": 0,
+      "malformed_dropped": 0,
+      "exact_duplicates": 1,
+      "negative_durations": 36,
+      "zero_durations": 371,
+      "nan_inf_rows": 371,
+      "exclusion_reasons": {
+        "exact_full_row_duplicate": 1
+      }
+    },
+    "Friday-WorkingHours-Morning.pcap_ISCX.csv": {
+      "total_raw_lines": 191034,
+      "valid_records": 191031,
+      "empty_dropped": 0,
+      "malformed_dropped": 0,
+      "exact_duplicates": 2,
+      "negative_durations": 9,
+      "zero_durations": 122,
+      "nan_inf_rows": 122,
+      "exclusion_reasons": {
+        "exact_full_row_duplicate": 2
+      }
+    },
+    "Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv": {
+      "total_raw_lines": 288603,
+      "valid_records": 288460,
+      "empty_dropped": 0,
+      "malformed_dropped": 0,
+      "exact_duplicates": 142,
+      "negative_durations": 4,
+      "zero_durations": 207,
+      "nan_inf_rows": 207,
+      "exclusion_reasons": {
+        "exact_full_row_duplicate": 142
+      }
+    },
+    "Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv": {
+      "total_raw_lines": 458969,
+      "valid_records": 170365,
+      "empty_dropped": 288602,
+      "malformed_dropped": 0,
+      "exact_duplicates": 1,
+      "negative_durations": 11,
+      "zero_durations": 135,
+      "nan_inf_rows": 135,
+      "exclusion_reasons": {
+        "exact_full_row_duplicate": 1,
+        "empty_or_blank_comma_row": 288602
+      }
+    },
+    "Tuesday-WorkingHours.pcap_ISCX.csv": {
+      "total_raw_lines": 445910,
+      "valid_records": 445905,
+      "empty_dropped": 0,
+      "malformed_dropped": 0,
+      "exact_duplicates": 4,
+      "negative_durations": 17,
+      "zero_durations": 264,
+      "nan_inf_rows": 264,
+      "exclusion_reasons": {
+        "exact_full_row_duplicate": 4
+      }
+    },
+    "Wednesday-workingHours.pcap_ISCX.csv": {
+      "total_raw_lines": 692704,
+      "valid_records": 692686,
+      "empty_dropped": 0,
+      "malformed_dropped": 0,
+      "exact_duplicates": 17,
+      "negative_durations": 21,
+      "zero_durations": 1296,
+      "nan_inf_rows": 1296,
+      "exclusion_reasons": {
+        "exact_full_row_duplicate": 17
+      }
+    }
+  },
+  "synthetic_baseline_comparison": {
+    "model_name": "NetShield Production Synthetic Baseline (Evaluated on CIC features)",
+    "confusion_matrix": {
+      "tn": 7010,
+      "fp": 2990,
+      "fn": 11829,
+      "tp": 1864
+    },
+    "precision": 0.384,
+    "recall": 0.1361,
+    "f1": 0.201,
+    "caveat": "Direct comparison is methodologically flawed because the synthetic model was trained on IP-layer packet lengths (40-60 bytes minimum), whereas CIC features contain payload-only byte lengths (0 bytes for control packets)."
+  }
+}

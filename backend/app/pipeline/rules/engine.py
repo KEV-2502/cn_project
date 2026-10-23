@@ -49,17 +49,31 @@ class RuleEngine:
         pcap_id: int,
         db: Session,
     ) -> List[ThreatAlert]:
-        """Execute detection for a capture, replace prior alerts idempotently, and persist."""
+        """Execute detection for a capture, replace prior alerts idempotently, and persist.
+
+        Preserves existing incident triage state (status and resolution notes)
+        for alerts matching the same (rule_id, src_ip, dst_ip) tuple.
+        """
         flows = db.query(NetworkFlow).filter(NetworkFlow.pcap_id == pcap_id).all()
         dns_records = db.query(DnsQueryRecord).filter(DnsQueryRecord.pcap_id == pcap_id).all()
 
         detection_results = self.evaluate_all(pcap_id, flows, dns_records)
+
+        # Retrieve existing alerts to preserve triage state (status, resolution_notes)
+        existing_alerts = db.query(ThreatAlert).filter(ThreatAlert.pcap_id == pcap_id).all()
+        triage_map = {
+            (a.rule_id, a.src_ip or "", a.dst_ip or ""): (a.status, a.resolution_notes)
+            for a in existing_alerts
+        }
 
         # Remove previous alerts for this capture to ensure deterministic idempotence
         db.query(ThreatAlert).filter(ThreatAlert.pcap_id == pcap_id).delete()
 
         alert_models: List[ThreatAlert] = []
         for res in detection_results:
+            key = (res.rule_id, res.src_ip or "", res.dst_ip or "")
+            saved_status, saved_notes = triage_map.get(key, (IncidentStatus.OPEN.value, None))
+
             alert = ThreatAlert(
                 pcap_id=pcap_id,
                 rule_id=res.rule_id,
@@ -77,7 +91,8 @@ class RuleEngine:
                 explanation=res.explanation,
                 evidence_json=json.dumps(res.evidence),
                 flow_ids_json=json.dumps(res.flow_ids),
-                status=IncidentStatus.OPEN.value,
+                status=saved_status,
+                resolution_notes=saved_notes,
             )
             alert_models.append(alert)
 

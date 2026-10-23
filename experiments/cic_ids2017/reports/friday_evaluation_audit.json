@@ -1,0 +1,421 @@
+{
+  "audit_metadata": {
+    "pcap_file": "Friday-WorkingHours.pcap",
+    "pcap_size_bytes": 8839309056,
+    "pcap_sha256": "beff0dcce1eebc9b2454582f4dc8ed0ba0112b2c619a710bf03af93147254cd0",
+    "audit_timestamp": "2026-10-23T15:06:21Z",
+    "total_flows_audited": 14351,
+    "audit_scope": "Full mathematical recomputation, ground-truth tier quantification, alert reconciliation, and benign overlap analysis."
+  },
+  "ground_truth_tier_quantification": {
+    "Confirmed_Morning_Benign": 1241,
+    "Confirmed_PortScan_Attack": 10325,
+    "Concurrent_PortScan_Background": 268,
+    "Confirmed_DDoS_Attack": 2285,
+    "Concurrent_DDoS_Background": 232
+  },
+  "rule_engine_reconciliation": {
+    "total_threat_alerts_generated": 65,
+    "total_unique_flows_flagged": 13532,
+    "rule_breakdown": {
+      "Horizontal Network Sweep Detected": {
+        "alerts_count": 12,
+        "unique_flows_flagged": 923,
+        "benign_flows_flagged": 923,
+        "attack_flows_flagged": 0
+      },
+      "Vertical Port Scan Detected": {
+        "alerts_count": 2,
+        "unique_flows_flagged": 10338,
+        "benign_flows_flagged": 0,
+        "attack_flows_flagged": 10338
+      },
+      "Excessive Connection Attempts Detected": {
+        "alerts_count": 6,
+        "unique_flows_flagged": 2517,
+        "benign_flows_flagged": 307,
+        "attack_flows_flagged": 2210
+      },
+      "Potential DNS Tunneling / Exfiltration Detected": {
+        "alerts_count": 9,
+        "unique_flows_flagged": 0,
+        "benign_flows_flagged": 0,
+        "attack_flows_flagged": 0
+      },
+      "Excessive DNS Query Volume Detected": {
+        "alerts_count": 28,
+        "unique_flows_flagged": 0,
+        "benign_flows_flagged": 0,
+        "attack_flows_flagged": 0
+      },
+      "Suspicious DNS Domain Generation / Diversity Detected": {
+        "alerts_count": 8,
+        "unique_flows_flagged": 0,
+        "benign_flows_flagged": 0,
+        "attack_flows_flagged": 0
+      }
+    },
+    "individual_alert_sample": [
+      {
+        "alert_index": 1,
+        "rule_id": "RULE_PORT_SCAN_HORIZONTAL",
+        "rule_name": "Horizontal Network Sweep Detected",
+        "src_ip": "192.168.10.25",
+        "dst_ip": null,
+        "severity": "HIGH",
+        "risk_score": 80.0,
+        "flows_attached_count": 52,
+        "benign_flows_count": 52,
+        "attack_flows_count": 0
+      },
+      {
+        "alert_index": 2,
+        "rule_id": "RULE_PORT_SCAN_HORIZONTAL",
+        "rule_name": "Horizontal Network Sweep Detected",
+        "src_ip": "192.168.10.5",
+        "dst_ip": null,
+        "severity": "HIGH",
+        "risk_score": 70.0,
+        "flows_attached_count": 35,
+        "benign_flows_count": 35,
+        "attack_flows_count": 0
+      },
+      {
+        "alert_index": 3,
+        "rule_id": "RULE_PORT_SCAN_HORIZONTAL",
+        "rule_name": "Horizontal Network Sweep Detected",
+        "src_ip": "192.168.10.5",
+        "dst_ip": null,
+        "severity": "HIGH",
+        "risk_score": 70.0,
+        "flows_attached_count": 29,
+        "benign_flows_count": 29,
+        "attack_flows_count": 0
+      },
+      {
+        "alert_index": 4,
+        "rule_id": "RULE_PORT_SCAN_HORIZONTAL",
+        "rule_name": "Horizontal Network Sweep Detected",
+        "src_ip": "192.168.10.9",
+        "dst_ip": null,
+        "severity": "HIGH",
+        "risk_score": 75.0,
+        "flows_attached_count": 60,
+        "benign_flows_count": 60,
+        "attack_flows_count": 0
+      },
+      {
+        "alert_index": 5,
+        "rule_id": "RULE_PORT_SCAN_HORIZONTAL",
+        "rule_name": "Horizontal Network Sweep Detected",
+        "src_ip": "192.168.10.14",
+        "dst_ip": null,
+        "severity": "HIGH",
+        "risk_score": 70.0,
+        "flows_attached_count": 56,
+        "benign_flows_count": 56,
+        "attack_flows_count": 0
+      },
+      {
+        "alert_index": 6,
+        "rule_id": "RULE_PORT_SCAN_HORIZONTAL",
+        "rule_name": "Horizontal Network Sweep Detected",
+        "src_ip": "192.168.10.14",
+        "dst_ip": null,
+        "severity": "HIGH",
+        "risk_score": 95.0,
+        "flows_attached_count": 146,
+        "benign_flows_count": 146,
+        "attack_flows_count": 0
+      },
+      {
+        "alert_index": 7,
+        "rule_id": "RULE_PORT_SCAN_HORIZONTAL",
+        "rule_name": "Horizontal Network Sweep Detected",
+        "src_ip": "192.168.10.14",
+        "dst_ip": null,
+        "severity": "HIGH",
+        "risk_score": 75.0,
+        "flows_attached_count": 35,
+        "benign_flows_count": 35,
+        "attack_flows_count": 0
+      },
+      {
+        "alert_index": 8,
+        "rule_id": "RULE_PORT_SCAN_HORIZONTAL",
+        "rule_name": "Horizontal Network Sweep Detected",
+        "src_ip": "192.168.10.17",
+        "dst_ip": null,
+        "severity": "HIGH",
+        "risk_score": 80.0,
+        "flows_attached_count": 113,
+        "benign_flows_count": 113,
+        "attack_flows_count": 0
+      },
+      {
+        "alert_index": 9,
+        "rule_id": "RULE_PORT_SCAN_HORIZONTAL",
+        "rule_name": "Horizontal Network Sweep Detected",
+        "src_ip": "192.168.10.17",
+        "dst_ip": null,
+        "severity": "HIGH",
+        "risk_score": 75.0,
+        "flows_attached_count": 20,
+        "benign_flows_count": 20,
+        "attack_flows_count": 0
+      },
+      {
+        "alert_index": 10,
+        "rule_id": "RULE_PORT_SCAN_VERTICAL",
+        "rule_name": "Vertical Port Scan Detected",
+        "src_ip": "192.168.10.50",
+        "dst_ip": "172.16.0.1",
+        "severity": "HIGH",
+        "risk_score": 95.0,
+        "flows_attached_count": 75,
+        "benign_flows_count": 0,
+        "attack_flows_count": 75
+      },
+      {
+        "alert_index": 11,
+        "rule_id": "RULE_PORT_SCAN_VERTICAL",
+        "rule_name": "Vertical Port Scan Detected",
+        "src_ip": "172.16.0.1",
+        "dst_ip": "192.168.10.50",
+        "severity": "HIGH",
+        "risk_score": 95.0,
+        "flows_attached_count": 10263,
+        "benign_flows_count": 0,
+        "attack_flows_count": 10263
+      },
+      {
+        "alert_index": 12,
+        "rule_id": "RULE_PORT_SCAN_HORIZONTAL",
+        "rule_name": "Horizontal Network Sweep Detected",
+        "src_ip": "192.168.10.15",
+        "dst_ip": null,
+        "severity": "HIGH",
+        "risk_score": 95.0,
+        "flows_attached_count": 166,
+        "benign_flows_count": 166,
+        "attack_flows_count": 0
+      },
+      {
+        "alert_index": 13,
+        "rule_id": "RULE_PORT_SCAN_HORIZONTAL",
+        "rule_name": "Horizontal Network Sweep Detected",
+        "src_ip": "192.168.10.16",
+        "dst_ip": null,
+        "severity": "HIGH",
+        "risk_score": 90.0,
+        "flows_attached_count": 183,
+        "benign_flows_count": 183,
+        "attack_flows_count": 0
+      },
+      {
+        "alert_index": 14,
+        "rule_id": "RULE_PORT_SCAN_HORIZONTAL",
+        "rule_name": "Horizontal Network Sweep Detected",
+        "src_ip": "192.168.10.19",
+        "dst_ip": null,
+        "severity": "HIGH",
+        "risk_score": 75.0,
+        "flows_attached_count": 28,
+        "benign_flows_count": 28,
+        "attack_flows_count": 0
+      },
+      {
+        "alert_index": 15,
+        "rule_id": "RULE_EXCESSIVE_CONN_RATE",
+        "rule_name": "Excessive Connection Attempts Detected",
+        "src_ip": "192.168.10.3",
+        "dst_ip": "192.168.10.1",
+        "severity": "MEDIUM",
+        "risk_score": 65.0,
+        "flows_attached_count": 61,
+        "benign_flows_count": 61,
+        "attack_flows_count": 0
+      }
+    ],
+    "root_cause_analysis": "The 65 alert records generated 13,532 unique flow IDs because Vertical Port Scan (RULE_PORT_SCAN_VERTICAL) from attacker 172.16.0.1 grouped 10,263 single-packet scan flows into 1 alert, and Excessive Connection Attempts (RULE_EXCESSIVE_CONN_RATE) from 172.16.0.1 grouped 2,210 DDoS flows into 1 alert. Conversely, the 45 DNS alerts operate purely on DnsQueryRecord and attach 0 flow IDs. Horizontal sweep rules (RULE_PORT_SCAN_HORIZONTAL) triggered on normal workstations visiting multi-host web endpoints, generating 943 false-positive flow IDs."
+  },
+  "benign_overlap_investigation": {
+    "total_benign_flows": 1741,
+    "flagged_by_ml_calib": 177,
+    "ml_fpr_percent": 10.17,
+    "ml_specificity_percent": 89.83,
+    "flagged_by_rules": 984,
+    "rules_fpr_percent": 56.52,
+    "rules_specificity_percent": 43.48,
+    "flagged_by_both": 130,
+    "flagged_by_ml_only": 47,
+    "flagged_by_rules_only": 854,
+    "combined_union_flagged_fp": 1031,
+    "combined_true_negatives_tn": 710,
+    "combined_fpr_percent": 59.22,
+    "combined_specificity_percent": 40.78
+  },
+  "audited_detector_metrics": {
+    "candidate_log1p_default_tau_050": {
+      "name": "Candidate PCAP Model (Log1p, tau=0.50)",
+      "confusion_matrix": {
+        "tn": 1711,
+        "fp": 30,
+        "fn": 12568,
+        "tp": 42
+      },
+      "math_identity_sum_verified": true,
+      "precision": 0.5833,
+      "recall": 0.0033,
+      "specificity": 0.9828,
+      "fpr": 0.0172,
+      "fnr": 0.9967,
+      "f1_score": 0.0066,
+      "portscan_recall_percent": 0.01,
+      "ddos_recall_percent": 1.79,
+      "overall_recall_percent": 0.33,
+      "benign_fpr_percent": 1.72,
+      "benign_specificity_percent": 98.28
+    },
+    "candidate_log1p_calibrated_tau_04732": {
+      "name": "Candidate PCAP Model (Log1p, tau=0.4732)",
+      "confusion_matrix": {
+        "tn": 1564,
+        "fp": 177,
+        "fn": 11546,
+        "tp": 1064
+      },
+      "math_identity_sum_verified": true,
+      "precision": 0.8574,
+      "recall": 0.0844,
+      "specificity": 0.8983,
+      "fpr": 0.1017,
+      "fnr": 0.9156,
+      "f1_score": 0.1536,
+      "portscan_recall_percent": 1.27,
+      "ddos_recall_percent": 40.83,
+      "overall_recall_percent": 8.44,
+      "benign_fpr_percent": 10.17,
+      "benign_specificity_percent": 89.83
+    },
+    "rule_engine_alone_deduplicated": {
+      "name": "Rule Engine Alone (Deduplicated)",
+      "confusion_matrix": {
+        "tn": 757,
+        "fp": 984,
+        "fn": 62,
+        "tp": 12548
+      },
+      "math_identity_sum_verified": true,
+      "precision": 0.9273,
+      "recall": 0.9951,
+      "specificity": 0.4348,
+      "fpr": 0.5652,
+      "fnr": 0.0049,
+      "f1_score": 0.96,
+      "portscan_recall_percent": 99.4,
+      "ddos_recall_percent": 100.0,
+      "overall_recall_percent": 99.51,
+      "benign_fpr_percent": 56.52,
+      "benign_specificity_percent": 43.48
+    },
+    "combined_candidate_calib_plus_rules": {
+      "name": "Combined Candidate (tau=0.4732) + Rules",
+      "confusion_matrix": {
+        "tn": 710,
+        "fp": 1031,
+        "fn": 0,
+        "tp": 12610
+      },
+      "math_identity_sum_verified": true,
+      "precision": 0.9244,
+      "recall": 1.0,
+      "specificity": 0.4078,
+      "fpr": 0.5922,
+      "fnr": 0.0,
+      "f1_score": 0.9607,
+      "portscan_recall_percent": 100.0,
+      "ddos_recall_percent": 100.0,
+      "overall_recall_percent": 100.0,
+      "benign_fpr_percent": 59.22,
+      "benign_specificity_percent": 40.78
+    },
+    "combined_candidate_def_plus_rules": {
+      "name": "Combined Candidate (tau=0.50) + Rules",
+      "confusion_matrix": {
+        "tn": 749,
+        "fp": 992,
+        "fn": 61,
+        "tp": 12549
+      },
+      "math_identity_sum_verified": true,
+      "precision": 0.9267,
+      "recall": 0.9952,
+      "specificity": 0.4302,
+      "fpr": 0.5698,
+      "fnr": 0.0048,
+      "f1_score": 0.9597,
+      "portscan_recall_percent": 99.41,
+      "ddos_recall_percent": 100.0,
+      "overall_recall_percent": 99.52,
+      "benign_fpr_percent": 56.98,
+      "benign_specificity_percent": 43.02
+    }
+  },
+  "confirmed_benign_only_evaluation": {
+    "candidate_ml_clean": {
+      "name": "Candidate Log1p (tau=0.4732) [Confirmed Only]",
+      "total_evaluated": 13851,
+      "confirmed_benign_count": 1241,
+      "confusion_matrix": {
+        "tn": 1163,
+        "fp": 78,
+        "fn": 11546,
+        "tp": 1064
+      },
+      "precision": 0.9317,
+      "recall": 0.0844,
+      "specificity": 0.9371,
+      "fpr": 0.0629,
+      "f1_score": 0.1547
+    },
+    "rule_engine_clean": {
+      "name": "Rule Engine [Confirmed Only]",
+      "total_evaluated": 13851,
+      "confirmed_benign_count": 1241,
+      "confusion_matrix": {
+        "tn": 695,
+        "fp": 546,
+        "fn": 62,
+        "tp": 12548
+      },
+      "precision": 0.9583,
+      "recall": 0.9951,
+      "specificity": 0.56,
+      "fpr": 0.44,
+      "f1_score": 0.9763
+    },
+    "combined_clean": {
+      "name": "Combined ML + Rules [Confirmed Only]",
+      "total_evaluated": 13851,
+      "confirmed_benign_count": 1241,
+      "confusion_matrix": {
+        "tn": 655,
+        "fp": 586,
+        "fn": 0,
+        "tp": 12610
+      },
+      "precision": 0.9556,
+      "recall": 1.0,
+      "specificity": 0.5278,
+      "fpr": 0.4722,
+      "f1_score": 0.9773
+    }
+  },
+  "production_integrity_verification": {
+    "production_model_sha256_verified": true,
+    "production_metadata_sha256_verified": true,
+    "candidate_model_sha256_verified": true,
+    "database_untouched": true
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "model_name": "Candidate Isolation Forest (CIC-IDS2017 Log1p Transform)",
+  "model_type": "IsolationForest",
+  "contamination": 0.01,
+  "offset": -0.6225462073668129,
+  "random_seed": 42,
+  "features_schema": "15 features with log1p on skewed indices [0, 1, 2, 3, 4, 7, 8, 9, 10, 14]",
+  "training_samples": 15000,
+  "training_source": "Monday-WorkingHours pure benign CSV",
+  "calibrated_threshold": 0.487
+}

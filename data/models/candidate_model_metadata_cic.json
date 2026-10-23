@@ -1,0 +1,86 @@
+{
+  "model_name": "Candidate Isolation Forest (CIC-IDS2017 Benign Baseline)",
+  "model_type": "IsolationForest",
+  "library": "scikit-learn",
+  "version": "0.2.0-candidate",
+  "schema_version": "v2_cicids2017_payload_features",
+  "created_at": "2026-10-22T18:39:50.793335+00:00",
+  "random_seed": 42,
+  "model_parameters": {
+    "n_estimators": 100,
+    "contamination": 0.01,
+    "random_state": 42,
+    "max_samples": "auto"
+  },
+  "training_summary": {
+    "dataset_source": "CIC-IDS2017 Monday-WorkingHours.pcap_ISCX.csv (Verified Benign)",
+    "sample_count": 15000,
+    "features_count": 15,
+    "disclaimer": "Trained strictly on verified Monday benign flows to establish nominal traffic baseline. Completely isolated from production model artifacts."
+  },
+  "feature_schema": [
+    "forward_packets",
+    "backward_packets",
+    "forward_bytes",
+    "backward_bytes",
+    "duration",
+    "packet_ratio",
+    "byte_ratio",
+    "forward_packet_rate",
+    "backward_packet_rate",
+    "forward_byte_rate",
+    "backward_byte_rate",
+    "is_tcp",
+    "is_udp",
+    "is_icmp",
+    "avg_packet_size"
+  ],
+  "baseline_feature_stats": {
+    "means": [
+      6.0738666666666665,
+      6.0916,
+      484.44193333333334,
+      5439.054133333333,
+      10.306609460866552,
+      0.5982587432190164,
+      0.39469344865673495,
+      738.4780647319178,
+      444.3787772342909,
+      26406.351932518646,
+      37100.96172193762,
+      0.5816,
+      0.418,
+      0.0,
+      107.43682185563388
+    ],
+    "stds": [
+      29.91628113667845,
+      57.71124797449981,
+      2172.817393300248,
+      104122.39340793437,
+      28.47317629759047,
+      0.1835152029045873,
+      0.3161340952125632,
+      1129.7288980629921,
+      761.8140998991192,
+      192296.85779443872,
+      124184.44545436566,
+      0.49329650312970275,
+      0.493230169393573,
+      0.0,
+      161.3434279263152
+    ]
+  },
+  "scoring_convention": {
+    "normalization": "normalized_score = clip(0.5 - decision_function(X), 0.0, 1.0)",
+    "anomaly_threshold": 0.5,
+    "interpretation": "Scores >= 0.50 indicate statistical outlier deviation relative to Monday benign baseline."
+  },
+  "dataset_audit_meta": {
+    "monday_file": "TrafficLabelling /Monday-WorkingHours.pcap_ISCX.csv",
+    "monday_total_benign_seen": 529884,
+    "train_count": 15000,
+    "eval_monday_holdout_count": 5000,
+    "disjoint_verification": "Partitioned from single shuffled reservoir; guaranteed zero overlap."
+  }
+}

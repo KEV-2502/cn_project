@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Navbar, TabType } from './components/Navbar';
 import { OverviewView } from './views/OverviewView';
 import { TrafficAnalyticsView } from './views/TrafficAnalyticsView';
+import { TopologyView } from './views/TopologyView';
 import { FlowExplorerView } from './views/FlowExplorerView';
 import { AlertsView } from './views/AlertsView';
 import { UploadView } from './views/UploadView';
@@ -54,6 +55,8 @@ export const App: React.FC = () => {
         return 'Executive Threat Intelligence & Operations Overview';
       case 'analytics':
         return 'Network Traffic Analytics & Protocol Telemetry';
+      case 'topology':
+        return 'Interactive Network Topology & Communication Map';
       case 'flows':
         return 'Bidirectional Flow Explorer & Anomaly Inspection';
       case 'alerts':
@@ -121,6 +124,15 @@ export const App: React.FC = () => {
             <TrafficAnalyticsView
               selectedPcap={selectedPcap}
               onNavigateUpload={() => setActiveTab('upload')}
+            />
+          )}
+
+          {activeTab === 'topology' && (
+            <TopologyView
+              selectedPcap={selectedPcap}
+              onNavigateUpload={() => setActiveTab('upload')}
+              onNavigateFlows={() => setActiveTab('flows')}
+              onNavigateAlerts={() => setActiveTab('alerts')}
             />
           )}
 

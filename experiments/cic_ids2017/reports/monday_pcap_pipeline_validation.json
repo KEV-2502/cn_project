@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "execution_timestamp": "2026-10-23T19:24:22Z",
+    "total_runtime_seconds": 0.05,
+    "peak_rss_mb": 362.38,
+    "capture_file": "/tmp/pytest-of-kev/pytest-47/test_run_bounded_pipeline_on_s0/synthetic_test.pcap",
+    "max_packets_configured": 50,
+    "isolated_db": "/tmp/pytest-of-kev/pytest-47/test_run_bounded_pipeline_on_s0/isolated_test.db"
+  },
+  "capture_integrity": {
+    "size_bytes": 1889,
+    "magic_hex": "d4c3b2a1",
+    "format": "PCAPNG",
+    "provenance_notes": "Downloaded from Hugging Face mirror (Ariasyah/cic-ids-2017). SHA-256 verified against mirror artifact. Independent UNB portal checksum was unavailable due to registration requirement.",
+    "expected_sha256": "f6eac599358f216b074338813a1cf7be3cc4e91d116e13efc0dc71f2cca11972"
+  },
+  "parser_metrics": {
+    "raw_packets_read": 25,
+    "parsed_ip_packets": 25,
+    "non_ip_packets_skipped": 0,
+    "parser_errors": 0,
+    "parse_duration_seconds": 0.005,
+    "packet_parsing_rate_pkts_per_sec": 5495.7,
+    "captured_duration_seconds": 0.0,
+    "captured_duration_minutes": 0.0,
+    "protocol_breakdown": {
+      "TCP": 20,
+      "DNS": 5
+    },
+    "dns_queries_extracted": 5
+  },
+  "flow_aggregation_metrics": {
+    "aggregated_flows_count": 7,
+    "aggregation_duration_seconds": 0.0,
+    "flow_protocols": {
+      "TCP": 2,
+      "DNS": 5
+    },
+    "tcp_states": {
+      "SYN_SENT": 2,
+      "N/A": 5
+    }
+  },
+  "ml_inference_metrics": {
+    "model_status": "active",
+    "model_file": "/home/kev/Projects/CN Project/data/models/isolation_forest.joblib",
+    "inference_duration_seconds": 0.017,
+    "score_mean": 0.5693,
+    "score_median": 0.5655,
+    "score_std": 0.006,
+    "score_min": 0.5655,
+    "score_max": 0.5788,
+    "flagged_anomalies_count": 7,
+    "anomaly_rate_percent": 100.0
+  },
+  "rule_engine_metrics": {
+    "rule_evaluation_duration_seconds": 0.005,
+    "alerts_generated_count": 0,
+    "alerts": []
+  },
+  "database_consistency": {
+    "isolated_db_file": "/tmp/pytest-of-kev/pytest-47/test_run_bounded_pipeline_on_s0/isolated_test.db",
+    "persisted_flows": 7,
+    "persisted_dns_queries": 5,
+    "persisted_alerts": 0,
+    "db_commit_duration_seconds": 0.002,
+    "all_counts_match": true
+  }
+}

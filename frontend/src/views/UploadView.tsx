@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { UploadCloud, FileText, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, AlertCircle, Trash2, RefreshCw } from 'lucide-react';
 import { PcapRecord } from '../types';
-import { uploadPcap, deletePcap } from '../services/api';
+import { uploadPcap, deletePcap, reanalyzePcap } from '../services/api';
 import { StatusBadge } from '../components/StatusBadge';
 
 interface Props {
@@ -21,6 +21,8 @@ export const UploadView: React.FC<Props> = ({
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [reanalyzingId, setReanalyzingId] = useState<number | null>(null);
+  const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -52,6 +54,26 @@ export const UploadView: React.FC<Props> = ({
       setUploadError(err.message || 'Failed to upload PCAP file.');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleReanalyze = async (pcap: PcapRecord) => {
+    setReanalyzingId(pcap.id);
+    setActionMessage(null);
+    try {
+      const result = await reanalyzePcap(pcap.id);
+      setActionMessage({
+        type: 'success',
+        text: result.message || `Re-analyzed "${pcap.filename}" successfully.`,
+      });
+      onRefreshPcaps();
+    } catch (err: any) {
+      setActionMessage({
+        type: 'error',
+        text: err.message || `Failed to re-analyze "${pcap.filename}".`,
+      });
+    } finally {
+      setReanalyzingId(null);
     }
   };
 
@@ -150,6 +172,26 @@ export const UploadView: React.FC<Props> = ({
           </button>
         </div>
 
+        {actionMessage && (
+          <div
+            style={{
+              marginBottom: '16px',
+              padding: '10px 14px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '0.875rem',
+              backgroundColor: actionMessage.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+              color: actionMessage.type === 'success' ? 'var(--accent-emerald)' : 'var(--accent-rose)',
+              border: `1px solid ${actionMessage.type === 'success' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
+            }}
+          >
+            {actionMessage.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+            <span>{actionMessage.text}</span>
+          </div>
+        )}
+
         {pcaps.length === 0 ? (
           <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
             No PCAP files have been uploaded yet. Upload one above to begin.
@@ -172,6 +214,7 @@ export const UploadView: React.FC<Props> = ({
               <tbody>
                 {pcaps.map((p) => {
                   const isSelected = selectedPcap?.id === p.id;
+                  const isReanalyzing = reanalyzingId === p.id;
                   return (
                     <tr
                       key={p.id}
@@ -189,7 +232,7 @@ export const UploadView: React.FC<Props> = ({
                         </div>
                       </td>
                       <td>
-                        <StatusBadge type="pcap" value={p.status} />
+                        <StatusBadge type="pcap" value={isReanalyzing ? 'PROCESSING' : p.status} />
                       </td>
                       <td style={{ fontFamily: 'var(--font-mono)' }}>{p.packet_count.toLocaleString()}</td>
                       <td style={{ fontFamily: 'var(--font-mono)' }}>{p.flow_count.toLocaleString()}</td>
@@ -204,7 +247,18 @@ export const UploadView: React.FC<Props> = ({
                         <div style={{ display: 'flex', gap: '6px' }}>
                           <button
                             className="btn btn-secondary"
+                            onClick={() => handleReanalyze(p)}
+                            disabled={reanalyzingId !== null}
+                            style={{ padding: '4px 8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            title="Re-run packet parsing, flow aggregation, rule detection and ML inference"
+                          >
+                            <RefreshCw size={12} className={isReanalyzing ? 'animate-spin' : ''} />
+                            {isReanalyzing ? 'Analyzing...' : 'Re-analyze'}
+                          </button>
+                          <button
+                            className="btn btn-secondary"
                             onClick={() => onSelectPcap(isSelected ? null : p)}
+                            disabled={reanalyzingId !== null}
                             style={{ padding: '4px 8px', fontSize: '0.75rem' }}
                           >
                             {isSelected ? 'Clear Filter' : 'Select'}
@@ -212,6 +266,7 @@ export const UploadView: React.FC<Props> = ({
                           <button
                             className="btn btn-danger"
                             onClick={() => handleDelete(p.id)}
+                            disabled={reanalyzingId !== null}
                             style={{ padding: '4px 8px', fontSize: '0.75rem' }}
                             title="Delete capture"
                           >

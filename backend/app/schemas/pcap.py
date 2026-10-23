@@ -23,3 +23,17 @@ class PcapResponse(PcapBase):
     processed_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class PcapReanalyzeResponse(BaseModel):
+    id: int
+    filename: str
+    status: str
+    packet_count: int
+    flow_count: int
+    alert_count: int
+    anomaly_count: int
+    duration_seconds: float
+    processed_at: Optional[datetime] = None
+    message: str
+
+    model_config = ConfigDict(from_attributes=True)

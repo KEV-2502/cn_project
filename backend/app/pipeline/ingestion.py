@@ -27,10 +27,13 @@ def process_pcap_ingestion(
     pcap_id: int,
     db: Session,
     timeout_seconds: Optional[float] = None,
+    clear_existing: bool = False,
 ) -> PcapFile:
     """Ingest a PCAP capture file incrementally, aggregate flows, and persist to the database.
 
     Updates the PcapFile status from QUEUED -> PROCESSING -> COMPLETED (or FAILED).
+    If clear_existing is True, previous derived records (NetworkFlow, DnsQueryRecord)
+    belonging to this pcap_id are purged before newly parsed objects are committed.
     """
     if timeout_seconds is None:
         timeout_seconds = settings.FLOW_TIMEOUT_SECONDS
@@ -139,13 +142,18 @@ def process_pcap_ingestion(
         except Exception as ml_err:
             logger.error(f"Error during ML anomaly scoring: {ml_err}. Continuing with default scores.")
 
+        # If reprocessing, safely purge old flows & DNS queries before inserting fresh ones
+        if clear_existing:
+            db.query(DnsQueryRecord).filter(DnsQueryRecord.pcap_id == pcap_id).delete()
+            db.query(NetworkFlow).filter(NetworkFlow.pcap_id == pcap_id).delete()
+
         if flow_models:
             db.bulk_save_objects(flow_models)
-            db.commit()
 
         if dns_query_models:
             db.bulk_save_objects(dns_query_models)
-            db.commit()
+
+        db.commit()
 
         # Run Rule-Based Threat Detection Engine
         rule_engine = RuleEngine()

@@ -1,11 +1,13 @@
 import {
   HealthStatus,
   PcapRecord,
+  PcapReanalyzeResult,
   NetworkFlowItem,
   ThreatAlertItem,
   OverviewStats,
   AnalyticsSummary,
   PaginatedResponse,
+  TopologyResponse,
 } from '../types';
 
 const API_BASE = '/api';
@@ -33,6 +35,17 @@ export async function uploadPcap(file: File): Promise<PcapRecord> {
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({ detail: res.statusText }));
     throw new Error(errorData.detail || 'Upload failed');
+  }
+  return res.json();
+}
+
+export async function reanalyzePcap(pcapId: number): Promise<PcapReanalyzeResult> {
+  const res = await fetch(`${API_BASE}/pcaps/${pcapId}/reanalyze`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(errorData.detail || 'Re-analysis failed');
   }
   return res.json();
 }
@@ -115,5 +128,24 @@ export async function updateAlertStatus(
     body: JSON.stringify({ status, resolution_notes: resolutionNotes }),
   });
   if (!res.ok) throw new Error('Failed to update alert status');
+  return res.json();
+}
+
+export async function fetchTopology(params: {
+  pcap_id?: number;
+  protocol?: string;
+  min_flows?: number;
+  only_alerts?: boolean;
+  limit_nodes?: number;
+}): Promise<TopologyResponse> {
+  const query = new URLSearchParams();
+  if (params.pcap_id !== undefined) query.set('pcap_id', params.pcap_id.toString());
+  if (params.protocol) query.set('protocol', params.protocol);
+  if (params.min_flows !== undefined) query.set('min_flows', params.min_flows.toString());
+  if (params.only_alerts) query.set('only_alerts', 'true');
+  if (params.limit_nodes !== undefined) query.set('limit_nodes', params.limit_nodes.toString());
+
+  const res = await fetch(`${API_BASE}/topology?${query.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch network topology');
   return res.json();
 }

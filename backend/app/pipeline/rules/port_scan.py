@@ -25,6 +25,42 @@ class PortScanRule(BaseRule):
         self.horizontal_host_threshold = horizontal_host_threshold
         self.window_seconds = window_seconds
 
+    @staticmethod
+    def is_scan_probe(flow: NetworkFlow) -> bool:
+        """Determines if a flow represents a scanning probe rather than an established session.
+
+        A flow is classified as a probe if:
+        1. It received no backward response (unanswered SYN, UDP, or ICMP probe).
+        2. TCP connection was rejected (RESET) with minimal backward data.
+        3. TCP connection remained incomplete (SYN_SENT, INCOMPLETE).
+        4. Embryonic TCP connection without application data exchange
+           (total_packets <= 3, forward_bytes <= 120, backward_bytes <= 80).
+        """
+        bwd_pkts = flow.backward_packets or 0
+        bwd_bytes = flow.backward_bytes or 0
+        fwd_bytes = flow.forward_bytes or 0
+        tot_pkts = flow.total_packets or (flow.forward_packets or 0) + bwd_pkts
+        tcp_state = flow.tcp_state or "N/A"
+
+        # Unanswered / unreplied flow
+        if bwd_pkts == 0 or bwd_bytes == 0:
+            return True
+
+        if flow.protocol == "TCP":
+            # Incomplete or rejected handshakes
+            if tcp_state in ("SYN_SENT", "INCOMPLETE"):
+                return True
+            if tcp_state == "RESET" and (bwd_bytes <= 60 or bwd_pkts <= 1):
+                return True
+            # Embryonic handshake without application data payload
+            if tot_pkts <= 3 and fwd_bytes <= 120 and bwd_bytes <= 80:
+                return True
+        elif flow.protocol in ("UDP", "ICMP", "DNS"):
+            if bwd_pkts == 0 or bwd_bytes == 0:
+                return True
+
+        return False
+
     def evaluate(
         self,
         pcap_id: int,
@@ -108,60 +144,65 @@ class PortScanRule(BaseRule):
                         )
 
             # --- 2. Horizontal Host Scan Evaluation (across distinct hosts) ---
-            clusters = []
-            cur = []
-            for f in f_list:
-                if not cur:
-                    cur.append(f)
-                elif f.start_time - cur[-1].start_time <= self.window_seconds:
-                    cur.append(f)
-                else:
-                    clusters.append(cur)
-                    cur = [f]
-            if cur:
-                clusters.append(cur)
+            # Filter for scan probe flows and evaluate across a bounded sliding window
+            probe_flows_only = [f for f in f_list if self.is_scan_probe(f)]
+            if len(probe_flows_only) >= self.horizontal_host_threshold:
+                probe_flows_only.sort(key=lambda x: x.start_time)
+                i = 0
+                n = len(probe_flows_only)
+                while i < n:
+                    window_end = probe_flows_only[i].start_time + self.window_seconds
+                    j = i
+                    while j < n and probe_flows_only[j].start_time <= window_end:
+                        j += 1
 
-            for cluster in clusters:
-                unique_hosts = {f.dst_ip for f in cluster}
-                if len(unique_hosts) >= self.horizontal_host_threshold:
-                    excess = len(unique_hosts) - self.horizontal_host_threshold
-                    intensity_bonus = min(25.0, (excess // 5) * 5.0)
-                    risk_score = min(95.0, 70.0 + intensity_bonus)
+                    window_probes = probe_flows_only[i:j]
+                    unique_probe_hosts = {f.dst_ip for f in window_probes}
 
-                    earliest_time = cluster[0].start_time
-                    flow_ids = [f.id for f in cluster if f.id is not None]
+                    if len(unique_probe_hosts) >= self.horizontal_host_threshold:
+                        excess = len(unique_probe_hosts) - self.horizontal_host_threshold
+                        intensity_bonus = min(25.0, (excess // 5) * 5.0)
+                        risk_score = min(95.0, 70.0 + intensity_bonus)
 
-                    evidence = {
-                        "scan_type": "horizontal",
-                        "src_ip": src_ip,
-                        "unique_targets_observed": len(unique_hosts),
-                        "threshold": self.horizontal_host_threshold,
-                        "time_window_seconds": self.window_seconds,
-                        "sample_probed_hosts": sorted(list(unique_hosts))[:25],
-                    }
+                        earliest_time = window_probes[0].start_time
+                        flow_ids = [f.id for f in window_probes if f.id is not None]
 
-                    explanation = (
-                        f"Source host {src_ip} probed {len(unique_hosts)} distinct destination hosts "
-                        f"within a {self.window_seconds}s time window "
-                        f"(threshold: {self.horizontal_host_threshold}). Base severity: HIGH (70). "
-                        f"Observed intensity modifier: +{intensity_bonus}. Total risk score: {risk_score}/100."
-                    )
+                        evidence = {
+                            "scan_type": "horizontal",
+                            "src_ip": src_ip,
+                            "unique_targets_observed": len(unique_probe_hosts),
+                            "probe_flows_observed": len(window_probes),
+                            "threshold": self.horizontal_host_threshold,
+                            "time_window_seconds": self.window_seconds,
+                            "sample_probed_hosts": sorted(list(unique_probe_hosts))[:25],
+                        }
 
-                    results.append(
-                        DetectionResult(
-                            rule_id="RULE_PORT_SCAN_HORIZONTAL",
-                            rule_name="Horizontal Network Sweep Detected",
-                            severity="HIGH",
-                            risk_score=risk_score,
-                            timestamp=earliest_time,
-                            description=f"Source {src_ip} swept {len(unique_hosts)} destination hosts",
-                            explanation=explanation,
-                            evidence=evidence,
-                            src_ip=src_ip,
-                            dst_ip=None,
-                            protocol=cluster[0].protocol,
-                            flow_ids=flow_ids,
+                        explanation = (
+                            f"Source host {src_ip} probed {len(unique_probe_hosts)} distinct destination hosts "
+                            f"with scan probes within a {self.window_seconds}s time window "
+                            f"(threshold: {self.horizontal_host_threshold}). Base severity: HIGH (70). "
+                            f"Observed intensity modifier: +{intensity_bonus}. Total risk score: {risk_score}/100."
                         )
-                    )
+
+                        results.append(
+                            DetectionResult(
+                                rule_id="RULE_PORT_SCAN_HORIZONTAL",
+                                rule_name="Horizontal Network Sweep Detected",
+                                severity="HIGH",
+                                risk_score=risk_score,
+                                timestamp=earliest_time,
+                                description=f"Source {src_ip} swept {len(unique_probe_hosts)} destination hosts",
+                                explanation=explanation,
+                                evidence=evidence,
+                                src_ip=src_ip,
+                                dst_ip=None,
+                                protocol=window_probes[0].protocol,
+                                flow_ids=flow_ids,
+                            )
+                        )
+                        # Advance past this alerted burst to prevent duplicate alerts
+                        i = j
+                    else:
+                        i += 1
 
         return results

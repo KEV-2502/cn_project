@@ -33,9 +33,14 @@ class ExcessiveConnectionRule(BaseRule):
         if not flows:
             return results
 
+        # Filter for connection-oriented (TCP) flows
+        tcp_flows = [f for f in flows if f.protocol == "TCP"]
+        if not tcp_flows:
+            return results
+
         # Group flows by (src_ip, dst_ip, dst_port)
         target_groups: Dict[tuple, List[NetworkFlow]] = defaultdict(list)
-        for f in flows:
+        for f in tcp_flows:
             target_groups[(f.src_ip, f.dst_ip, f.dst_port)].append(f)
 
         for (src_ip, dst_ip, dst_port), t_flows in target_groups.items():
@@ -43,22 +48,17 @@ class ExcessiveConnectionRule(BaseRule):
                 continue
 
             t_flows.sort(key=lambda x: x.start_time)
-            clusters: List[List[NetworkFlow]] = []
-            cur: List[NetworkFlow] = []
-            for f in t_flows:
-                if not cur:
-                    cur.append(f)
-                elif f.start_time - cur[-1].start_time <= self.window_seconds:
-                    cur.append(f)
-                else:
-                    clusters.append(cur)
-                    cur = [f]
-            if cur:
-                clusters.append(cur)
+            i = 0
+            n = len(t_flows)
+            while i < n:
+                window_end = t_flows[i].start_time + self.window_seconds
+                j = i
+                while j < n and t_flows[j].start_time <= window_end:
+                    j += 1
 
-            for cluster in clusters:
-                count = len(cluster)
+                count = j - i
                 if count >= self.rate_threshold:
+                    cluster = t_flows[i:j]
                     excess = count - self.rate_threshold
                     intensity_bonus = min(25.0, (excess // 10) * 5.0)
                     risk_score = min(90.0, 55.0 + intensity_bonus)
@@ -98,9 +98,13 @@ class ExcessiveConnectionRule(BaseRule):
                             dst_ip=dst_ip,
                             src_port=None,
                             dst_port=dst_port,
-                            protocol=cluster[0].protocol,
+                            protocol="TCP",
                             flow_ids=flow_ids,
                         )
                     )
+                    # Advance past this alerted window to prevent duplicate alert spam
+                    i = j
+                else:
+                    i += 1
 
         return results

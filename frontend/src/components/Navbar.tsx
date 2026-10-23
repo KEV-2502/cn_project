@@ -1,8 +1,8 @@
 import React from 'react';
-import { ShieldAlert, BarChart3, Network, UploadCloud, LayoutDashboard } from 'lucide-react';
+import { ShieldAlert, BarChart3, Network, UploadCloud, LayoutDashboard, Share2 } from 'lucide-react';
 import { HealthStatus, PcapRecord } from '../types';
 
-export type TabType = 'overview' | 'analytics' | 'flows' | 'alerts' | 'upload';
+export type TabType = 'overview' | 'analytics' | 'topology' | 'flows' | 'alerts' | 'upload';
 
 interface Props {
   activeTab: TabType;
@@ -26,6 +26,7 @@ export const Navbar: React.FC<Props> = ({
   const navItems = [
     { id: 'overview' as TabType, label: 'Overview', icon: <LayoutDashboard size={18} /> },
     { id: 'analytics' as TabType, label: 'Traffic Analytics', icon: <BarChart3 size={18} /> },
+    { id: 'topology' as TabType, label: 'Network Topology', icon: <Share2 size={18} /> },
     { id: 'flows' as TabType, label: 'Flow Explorer', icon: <Network size={18} /> },
     {
       id: 'alerts' as TabType,

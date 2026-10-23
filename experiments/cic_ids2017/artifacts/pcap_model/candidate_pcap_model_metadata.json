@@ -1,0 +1,115 @@
+{
+  "model_name": "PCAP-Derived Isolation Forest Network Flow Anomaly Detector",
+  "model_type": "IsolationForest",
+  "library": "scikit-learn",
+  "version": "0.2.0-pcap-candidate",
+  "random_seed": 42,
+  "model_parameters": {
+    "n_estimators": 100,
+    "contamination": 0.01,
+    "random_state": 42,
+    "max_samples": "auto"
+  },
+  "training_data": {
+    "source_pcap": "data/datasets/pcap/Monday-WorkingHours.pcap",
+    "source_pcap_sha256": "f6eac599358f216b074338813a1cf7be3cc4e91d116e13efc0dc71f2cca11972",
+    "traffic_nature": "Intended-benign normal working hours capture (Monday)",
+    "packet_sample_count": 250000,
+    "training_flows_count": 2078,
+    "training_time_span_seconds": 543.24,
+    "disclaimer": "Trained on real PCAP flows processed via NetShield FlowAggregator. Assumed intended-benign without per-flow independent ground truth."
+  },
+  "feature_schema": [
+    "forward_packets",
+    "backward_packets",
+    "forward_bytes",
+    "backward_bytes",
+    "duration",
+    "packet_ratio",
+    "byte_ratio",
+    "forward_packet_rate",
+    "backward_packet_rate",
+    "forward_byte_rate",
+    "backward_byte_rate",
+    "is_tcp",
+    "is_udp",
+    "is_icmp",
+    "avg_packet_size"
+  ],
+  "preprocessing": {
+    "type": "log1p",
+    "description": "log(1 + x) applied to skewed count, duration, and rate features",
+    "skewed_feature_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      7,
+      8,
+      9,
+      10,
+      14
+    ],
+    "skewed_feature_names": [
+      "forward_packets",
+      "backward_packets",
+      "forward_bytes",
+      "backward_bytes",
+      "duration",
+      "forward_packet_rate",
+      "backward_packet_rate",
+      "forward_byte_rate",
+      "backward_byte_rate",
+      "avg_packet_size"
+    ]
+  },
+  "baseline_feature_stats": {
+    "means": [
+      1.4332538460400164,
+      1.1238953148672506,
+      5.52366434617928,
+      5.168650695605515,
+      0.40264217458186174,
+      0.5543432764445109,
+      0.46455059811904487,
+      5.3911477089492355,
+      4.825860468795615,
+      9.726872025379619,
+      9.113958940721059,
+      0.13041385948026948,
+      0.8512993262752647,
+      0.013474494706448507,
+      4.7274255698953125
+    ],
+    "stds": [
+      0.9300783370277544,
+      0.7617346886300989,
+      1.3891640228718558,
+      2.1076863237458188,
+      1.088183949427817,
+      0.14953770861792987,
+      0.208597093581438,
+      2.7160120698511987,
+      2.9891518262760934,
+      3.0266509876795773,
+      4.170899277563314,
+      0.33675819921084543,
+      0.3557931749746489,
+      0.11529498123879528,
+      0.6127883183080043
+    ]
+  },
+  "threshold_calibration": {
+    "method": "Validation quantile calibration targeting <= 2.0% observed anomaly rate on disjoint benign validation split",
+    "validation_flows_count": 2886,
+    "default_threshold": 0.5,
+    "default_observed_anomaly_rate_percent": 0.8,
+    "calibrated_threshold": 0.4732,
+    "calibrated_observed_anomaly_rate_percent": 2.01
+  },
+  "artifact_integrity": {
+    "model_file": "candidate_pcap_isolation_forest.joblib",
+    "model_sha256": "d507d782a4a0b7e6eddded9f5075e576c006c8097675eea00bb15f336d41da23"
+  }
+}

@@ -9,6 +9,7 @@ from backend.app.api.pcaps import router as pcaps_router
 from backend.app.api.flows import router as flows_router
 from backend.app.api.alerts import router as alerts_router
 from backend.app.api.stats import router as stats_router
+from backend.app.api.topology import router as topology_router
 
 
 @asynccontextmanager
@@ -40,6 +41,7 @@ app.include_router(pcaps_router, prefix=settings.API_V1_PREFIX)
 app.include_router(flows_router, prefix=settings.API_V1_PREFIX)
 app.include_router(alerts_router, prefix=settings.API_V1_PREFIX)
 app.include_router(stats_router, prefix=settings.API_V1_PREFIX)
+app.include_router(topology_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")

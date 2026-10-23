@@ -42,3 +42,20 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 repomix*
+
+# Large raw datasets and local captures
+data/datasets/
+/Monday-WorkingHours.pcap
+
+# Generated TypeScript build cache
+frontend/tsconfig.tsbuildinfo
+
+# Keep models required by the application and experiment demo
+!data/models/isolation_forest.joblib
+!data/models/model_metadata.json
+!data/models/candidate_isolation_forest_cic.joblib
+!data/models/candidate_model_metadata_cic.json
+
+# Generated experiment outputs
+experiments/cic_ids2017/artifacts/friday_flows.joblib
+experiments/cic_ids2017/reports/ml_candidate_comparison.json

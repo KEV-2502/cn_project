@@ -13,7 +13,7 @@ from backend.app.models.pcap import PcapFile, PcapStatus
 from backend.app.models.flow import NetworkFlow
 from backend.app.models.alert import ThreatAlert
 from backend.app.models.dns import DnsQueryRecord
-from backend.app.schemas.pcap import PcapResponse
+from backend.app.schemas.pcap import PcapResponse, PcapReanalyzeResponse
 from backend.app.schemas.alert import AlertResponse
 from backend.app.config import settings
 from backend.app.pipeline.parser import get_pcap_reader
@@ -175,6 +175,83 @@ def upload_pcap(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred while processing the capture: {str(e)}",
         )
+
+
+@router.post("/{pcap_id}/reanalyze", response_model=PcapReanalyzeResponse)
+def reanalyze_pcap(pcap_id: int, db: Session = Depends(get_db)):
+    """Re-analyze an existing capture file with the complete detection pipeline.
+
+    1. Loads the original capture metadata from SQLite.
+    2. Validates that the capture file exists on disk and is readable.
+    3. Runs packet parsing, flow aggregation, ML anomaly scoring, and rule threat detection.
+    4. Safely refreshes derived flows, DNS records, and alerts without multiplying records or altering capture identity.
+    5. Returns an explicit summary including packet, flow, alert, and anomaly counts.
+    """
+    pcap = db.query(PcapFile).filter(PcapFile.id == pcap_id).first()
+    if not pcap:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"PCAP capture with ID {pcap_id} not found",
+        )
+
+    file_path = Path(pcap.file_path)
+    if not file_path.exists() or not file_path.is_file():
+        pcap.status = PcapStatus.FAILED.value
+        pcap.error_message = f"Original capture file not found on disk: {file_path}"
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Original capture file '{file_path.name}' is missing on disk",
+        )
+
+    # Validate that the file is readable
+    try:
+        reader = get_pcap_reader(str(file_path))
+        try:
+            next(iter(reader), None)
+        finally:
+            if hasattr(reader, "close"):
+                try:
+                    reader.close()
+                except Exception:
+                    pass
+    except Exception as read_err:
+        pcap.status = PcapStatus.FAILED.value
+        pcap.error_message = f"Capture file cannot be parsed or read: {str(read_err)}"
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Original capture file cannot be read: {str(read_err)}",
+        )
+
+    # Process ingestion with clear_existing=True to atomically replace previous derived results
+    try:
+        updated_pcap = process_pcap_ingestion(pcap_id, db, clear_existing=True)
+    except Exception as proc_err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Re-analysis failed during ingestion pipeline: {str(proc_err)}",
+        )
+
+    # Count anomalous flows
+    anomaly_count = (
+        db.query(NetworkFlow)
+        .filter(NetworkFlow.pcap_id == pcap_id, NetworkFlow.is_anomaly == 1)
+        .count()
+    )
+
+    return PcapReanalyzeResponse(
+        id=updated_pcap.id,
+        filename=updated_pcap.filename,
+        status=updated_pcap.status,
+        packet_count=updated_pcap.packet_count,
+        flow_count=updated_pcap.flow_count,
+        alert_count=updated_pcap.alert_count,
+        anomaly_count=anomaly_count,
+        duration_seconds=updated_pcap.duration_seconds,
+        processed_at=updated_pcap.processed_at,
+        message=f"Capture '{updated_pcap.filename}' successfully re-analyzed. Generated {updated_pcap.flow_count} flows ({anomaly_count} anomalous) and {updated_pcap.alert_count} alerts.",
+    )
 
 
 @router.post("/{pcap_id}/detect", response_model=List[AlertResponse])
